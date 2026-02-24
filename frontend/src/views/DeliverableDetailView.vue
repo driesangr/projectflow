@@ -43,16 +43,28 @@ const draggableTodo = ref<UserStory[]>([])
 const draggableInProgress = ref<UserStory[]>([])
 const draggableDone = ref<UserStory[]>([])
 const draggableOnHold = ref<UserStory[]>([])
+const isDragging = ref(false)
 
 watch(storiesByStatus, (val) => {
+  if (isDragging.value) return
   draggableTodo.value = [...val.todo]
   draggableInProgress.value = [...val.in_progress]
   draggableDone.value = [...val.done]
   draggableOnHold.value = [...val.on_hold]
 }, { immediate: true })
 
-async function onColumnDragEnd(column: UserStory[]) {
-  await storiesStore.reorder(column.map((s, idx) => ({ id: s.id, position: idx })))
+async function onStoryChange(status: UserStory['status'], column: UserStory[], evt: any) {
+  if (evt.added) {
+    isDragging.value = true
+    try {
+      await storiesStore.update(evt.added.element.id, { status })
+      await storiesStore.reorder(column.map((s, i) => ({ id: s.id, position: i })))
+    } finally {
+      isDragging.value = false
+    }
+  } else if (evt.moved || evt.removed) {
+    await storiesStore.reorder(column.map((s, i) => ({ id: s.id, position: i })))
+  }
 }
 
 async function quickStatusToggle(s: UserStory) {
@@ -180,7 +192,7 @@ async function handleDelete() {
           <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
             To Do ({{ storiesByStatus.todo.length }})
           </h3>
-          <draggable v-model="draggableTodo" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableTodo)">
+          <draggable v-model="draggableTodo" group="stories" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onStoryChange('todo', draggableTodo, evt)">
             <template #item="{ element: story }">
               <div class="card group">
                 <div class="card-body py-3">
@@ -212,7 +224,7 @@ async function handleDelete() {
           <h3 class="text-xs font-semibold uppercase tracking-wider text-blue-500 mb-2">
             In Progress ({{ storiesByStatus.in_progress.length }})
           </h3>
-          <draggable v-model="draggableInProgress" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableInProgress)">
+          <draggable v-model="draggableInProgress" group="stories" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onStoryChange('in_progress', draggableInProgress, evt)">
             <template #item="{ element: story }">
               <div class="card group border-blue-200">
                 <div class="card-body py-3">
@@ -244,7 +256,7 @@ async function handleDelete() {
           <h3 class="text-xs font-semibold uppercase tracking-wider text-green-600 mb-2">
             Done ({{ storiesByStatus.done.length }})
           </h3>
-          <draggable v-model="draggableDone" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableDone)">
+          <draggable v-model="draggableDone" group="stories" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onStoryChange('done', draggableDone, evt)">
             <template #item="{ element: story }">
               <div class="card group opacity-75">
                 <div class="card-body py-3">
@@ -275,7 +287,7 @@ async function handleDelete() {
           <h3 class="text-xs font-semibold uppercase tracking-wider text-yellow-600 mb-2">
             On Hold ({{ storiesByStatus.on_hold.length }})
           </h3>
-          <draggable v-model="draggableOnHold" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableOnHold)">
+          <draggable v-model="draggableOnHold" group="stories" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onStoryChange('on_hold', draggableOnHold, evt)">
             <template #item="{ element: story }">
               <div class="card group border-yellow-200">
                 <div class="card-body py-3">

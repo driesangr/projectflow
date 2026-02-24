@@ -90,15 +90,27 @@ const tasksByStatus = computed(() => ({
 const draggableTodo = ref<Task[]>([])
 const draggableInProgress = ref<Task[]>([])
 const draggableDone = ref<Task[]>([])
+const isDragging = ref(false)
 
 watch(tasksByStatus, (val) => {
+  if (isDragging.value) return
   draggableTodo.value = [...val.todo]
   draggableInProgress.value = [...val.in_progress]
   draggableDone.value = [...val.done]
 }, { immediate: true })
 
-async function onColumnDragEnd(column: Task[]) {
-  await tasksStore.reorder(column.map((t, idx) => ({ id: t.id, position: idx })))
+async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
+  if (evt.added) {
+    isDragging.value = true
+    try {
+      await tasksStore.update(evt.added.element.id, { status })
+      await tasksStore.reorder(column.map((t, i) => ({ id: t.id, position: i })))
+    } finally {
+      isDragging.value = false
+    }
+  } else if (evt.moved || evt.removed) {
+    await tasksStore.reorder(column.map((t, i) => ({ id: t.id, position: i })))
+  }
 }
 </script>
 
@@ -166,7 +178,8 @@ async function onColumnDragEnd(column: Task[]) {
             item-key="id"
             handle=".drag-handle"
             animation="150"
-            @end="() => onColumnDragEnd(draggableTodo)"
+            group="tasks"
+            @change="(evt) => onTaskChange('todo', draggableTodo, evt)"
           >
             <template #item="{ element: task }">
               <div class="card group">
@@ -209,7 +222,8 @@ async function onColumnDragEnd(column: Task[]) {
             item-key="id"
             handle=".drag-handle"
             animation="150"
-            @end="() => onColumnDragEnd(draggableInProgress)"
+            group="tasks"
+            @change="(evt) => onTaskChange('in_progress', draggableInProgress, evt)"
           >
             <template #item="{ element: task }">
               <div class="card group border-blue-200">
@@ -252,7 +266,8 @@ async function onColumnDragEnd(column: Task[]) {
             item-key="id"
             handle=".drag-handle"
             animation="150"
-            @end="() => onColumnDragEnd(draggableDone)"
+            group="tasks"
+            @change="(evt) => onTaskChange('done', draggableDone, evt)"
           >
             <template #item="{ element: task }">
               <div class="card group opacity-75">
