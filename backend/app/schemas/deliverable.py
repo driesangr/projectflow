@@ -15,6 +15,7 @@ class DeliverableBase(BaseModel):
     title: str
     description: Optional[str] = None
     epic_points: Optional[int] = None
+    business_value: Optional[int] = None
     status: DeliverableStatus = DeliverableStatus.todo
     owner_name: Optional[str] = None
     topic_id: UUID
@@ -28,6 +29,7 @@ class DeliverableUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     epic_points: Optional[int] = None
+    business_value: Optional[int] = None
     status: Optional[DeliverableStatus] = None
     owner_name: Optional[str] = None
 

@@ -134,6 +134,9 @@ async function handleDelete() {
             <span v-if="deliverablesStore.current.epic_points" class="text-xs text-gray-500">
               {{ deliverablesStore.current.epic_points }} epic pts
             </span>
+            <span v-if="deliverablesStore.current.business_value != null" class="text-xs text-gray-500">
+              BV {{ deliverablesStore.current.business_value }}
+            </span>
           </div>
           <div class="mt-2 w-64">
             <MaturityBar :percent="deliverablesStore.current.maturity_percent" />

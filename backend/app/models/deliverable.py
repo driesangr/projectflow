@@ -23,6 +23,7 @@ class Deliverable(Base, TimestampMixin, SoftDeleteMixin):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     epic_points: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    business_value: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     # Manual drag-and-drop ordering within the parent topic
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     # Calculated field – updated via maturity service

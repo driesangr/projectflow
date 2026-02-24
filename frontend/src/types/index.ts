@@ -66,6 +66,7 @@ export interface Deliverable {
   title: string
   description: string | null
   epic_points: number | null
+  business_value: number | null
   status: DeliverableStatus
   owner_name: string | null
   topic_id: string
@@ -155,6 +156,7 @@ export interface DeliverableCreate {
   title: string
   description?: string | null
   epic_points?: number | null
+  business_value?: number | null
   status?: DeliverableStatus
   owner_name?: string | null
   topic_id: string
