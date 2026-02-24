@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useUserStoriesStore } from '@/stores/userStories'
 import { useTasksStore } from '@/stores/tasks'
 import { useApi } from '@/composables/useApi'
-import type { Task, TaskCreate } from '@/types'
+import type { Task, TaskCreate, UserStoryCreate } from '@/types'
 import Breadcrumb from '@/components/layout/Breadcrumb.vue'
 import Modal from '@/components/common/Modal.vue'
 import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
@@ -13,6 +13,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import TaskForm from '@/components/forms/TaskForm.vue'
+import UserStoryForm from '@/components/forms/UserStoryForm.vue'
 import {
   PlusIcon,
   PencilSquareIcon,
@@ -31,9 +32,12 @@ const tasksStore = useTasksStore()
 const { loading: saving, error: saveError, execute } = useApi()
 
 const showCreate = ref(false)
+const showEditStory = ref(false)
 const editTarget = ref<Task | null>(null)
 const deleteTarget = ref<Task | null>(null)
 const deleting = ref(false)
+
+const projectId = ref<string>('')
 
 const breadcrumbs = computed(() => {
   const story = storiesStore.current
@@ -47,7 +51,20 @@ const breadcrumbs = computed(() => {
 onMounted(async () => {
   await storiesStore.fetchOne(storyId)
   await tasksStore.fetchAll(storyId)
+
+  if (storiesStore.current) {
+    const { getDeliverable } = await import('@/api/deliverables')
+    const deliverable = await getDeliverable(storiesStore.current.deliverable_id)
+    const { getTopic } = await import('@/api/topics')
+    const topic = await getTopic(deliverable.topic_id)
+    projectId.value = topic.project_id
+  }
 })
+
+async function handleStoryEdit(data: UserStoryCreate) {
+  const result = await execute(() => storiesStore.update(storyId, data))
+  if (result) showEditStory.value = false
+}
 
 async function handleCreate(data: TaskCreate) {
   const result = await execute(() => tasksStore.create(data))
@@ -129,11 +146,21 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
             <span v-if="storiesStore.current.story_points" class="text-xs text-gray-500">
               {{ storiesStore.current.story_points }} story pts
             </span>
+            <span v-if="storiesStore.current.business_value != null" class="text-xs text-gray-500">
+              BV {{ storiesStore.current.business_value }}
+            </span>
+            <span v-if="storiesStore.current.sprint_value != null" class="text-xs text-gray-500">
+              SV {{ storiesStore.current.sprint_value }}
+            </span>
             <span v-if="storiesStore.current.owner_name" class="text-xs text-gray-500">
               {{ storiesStore.current.owner_name }}
             </span>
           </div>
         </div>
+        <button class="btn-secondary btn-sm" @click="showEditStory = true">
+          <PencilSquareIcon class="h-4 w-4" />
+          Edit Story
+        </button>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -324,5 +351,18 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
       @close="deleteTarget = null"
       @confirm="handleDelete"
     />
+
+    <Modal :open="showEditStory" title="Edit User Story" @close="showEditStory = false">
+      <ErrorBanner v-if="saveError" :message="saveError" class="mb-3" />
+      <UserStoryForm
+        v-if="storiesStore.current"
+        :deliverable-id="storiesStore.current.deliverable_id"
+        :project-id="projectId"
+        :initial="storiesStore.current"
+        :loading="saving"
+        @submit="handleStoryEdit"
+        @cancel="showEditStory = false"
+      />
+    </Modal>
   </div>
 </template>
