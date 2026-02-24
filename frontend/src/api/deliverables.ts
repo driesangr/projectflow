@@ -29,3 +29,8 @@ export async function deleteDeliverable(id: string): Promise<void> {
 export async function reorderDeliverables(items: { id: string; position: number }[]): Promise<void> {
   await apiClient.patch('/deliverables/reorder', items)
 }
+
+export async function duplicateDeliverable(id: string): Promise<Deliverable> {
+  const { data } = await apiClient.post<Deliverable>(`/deliverables/${id}/duplicate`)
+  return data
+}

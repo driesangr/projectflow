@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useDeliverablesStore } from '@/stores/deliverables'
 import { useUserStoriesStore } from '@/stores/userStories'
 import { useApi } from '@/composables/useApi'
@@ -15,10 +15,11 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import UserStoryForm from '@/components/forms/UserStoryForm.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
+const router = useRouter()
 const deliverableId = route.params.deliverableId as string
 
 const deliverablesStore = useDeliverablesStore()
@@ -96,6 +97,11 @@ async function handleDeliverableEdit(data: DeliverableCreate) {
   if (result) showEditDeliverable.value = false
 }
 
+async function handleDuplicate() {
+  const copy = await execute(() => deliverablesStore.duplicate(deliverableId))
+  if (copy) router.push(`/deliverables/${copy.id}`)
+}
+
 async function handleCreate(data: UserStoryCreate) {
   const result = await execute(() => storiesStore.create(data))
   if (result) showCreate.value = false
@@ -142,10 +148,16 @@ async function handleDelete() {
             <MaturityBar :percent="deliverablesStore.current.maturity_percent" />
           </div>
         </div>
-        <button class="btn-secondary btn-sm" @click="showEditDeliverable = true">
-          <PencilSquareIcon class="h-4 w-4" />
-          Edit Deliverable
-        </button>
+        <div class="flex items-center gap-2">
+          <button class="btn-secondary btn-sm" @click="handleDuplicate">
+            <DocumentDuplicateIcon class="h-4 w-4" />
+            Duplicate
+          </button>
+          <button class="btn-secondary btn-sm" @click="showEditDeliverable = true">
+            <PencilSquareIcon class="h-4 w-4" />
+            Edit Deliverable
+          </button>
+        </div>
       </div>
 
       <p v-if="deliverablesStore.current.description" class="text-sm text-gray-600 mb-6">

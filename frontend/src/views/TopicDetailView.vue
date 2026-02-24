@@ -15,7 +15,7 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
@@ -112,6 +112,10 @@ async function handleDelete() {
   } finally {
     deleting.value = false
   }
+}
+
+async function handleDuplicate(id: string) {
+  await execute(() => deliverablesStore.duplicate(id))
 }
 </script>
 
@@ -222,8 +226,9 @@ async function handleDelete() {
                   <MaturityBar :percent="d.maturity_percent" />
                 </div>
                 <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                  <button class="btn-icon" @click="editTarget = d"><PencilSquareIcon class="h-4 w-4" /></button>
-                  <button class="btn-icon text-red-500 hover:text-red-700 hover:bg-red-50" @click="deleteTarget = d"><TrashIcon class="h-4 w-4" /></button>
+                  <button class="btn-icon" title="Edit" @click="editTarget = d"><PencilSquareIcon class="h-4 w-4" /></button>
+                  <button class="btn-icon" title="Duplicate" @click="handleDuplicate(d.id)"><DocumentDuplicateIcon class="h-4 w-4" /></button>
+                  <button class="btn-icon text-red-500 hover:text-red-700 hover:bg-red-50" title="Delete" @click="deleteTarget = d"><TrashIcon class="h-4 w-4" /></button>
                 </div>
               </div>
             </div>

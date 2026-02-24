@@ -57,5 +57,11 @@ export const useDeliverablesStore = defineStore('deliverables', () => {
     await api.reorderDeliverables(items)
   }
 
-  return { deliverables, current, loading, error, fetchAll, fetchOne, create, update, remove, reorder }
+  async function duplicate(id: string): Promise<Deliverable> {
+    const copy = await api.duplicateDeliverable(id)
+    deliverables.value.push(copy)
+    return copy
+  }
+
+  return { deliverables, current, loading, error, fetchAll, fetchOne, create, update, remove, reorder, duplicate }
 })

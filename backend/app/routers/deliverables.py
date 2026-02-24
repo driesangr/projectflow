@@ -136,6 +136,68 @@ async def update_deliverable(
     return deliverable
 
 
+@router.post(
+    "/{deliverable_id}/duplicate", response_model=DeliverableResponse,
+    status_code=status.HTTP_201_CREATED, summary="Duplicate a deliverable"
+)
+async def duplicate_deliverable(
+    deliverable_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Deliverable:
+    source = await db.get(Deliverable, deliverable_id)
+    if not source or source.is_deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deliverable not found")
+
+    # Fetch existing titles in the same topic to guarantee uniqueness
+    titles_result = await db.execute(
+        select(Deliverable.title).where(
+            Deliverable.topic_id == source.topic_id,
+            Deliverable.is_deleted.is_(False),
+        )
+    )
+    existing_titles = {row[0] for row in titles_result.fetchall()}
+
+    # Generate "title Kopie_1", "title Kopie_2", … until unique
+    counter = 1
+    while True:
+        candidate = f"{source.title} Kopie_{counter}"
+        if candidate not in existing_titles:
+            break
+        counter += 1
+
+    count_res = await db.execute(
+        select(func.count(Deliverable.id)).where(
+            Deliverable.topic_id == source.topic_id,
+            Deliverable.is_deleted.is_(False),
+        )
+    )
+    copy = Deliverable(
+        title=candidate,
+        description=source.description,
+        epic_points=source.epic_points,
+        business_value=source.business_value,
+        status=source.status,
+        owner_name=source.owner_name,
+        topic_id=source.topic_id,
+        position=count_res.scalar() or 0,
+    )
+    db.add(copy)
+    await db.flush()
+
+    db.add(AuditLog(
+        entity_type="Deliverable",
+        entity_id=copy.id,
+        action=AuditAction.created,
+        changed_by=current_user.username,
+        changed_at=datetime.now(timezone.utc),
+        changes={"title": copy.title, "duplicated_from": str(deliverable_id)},
+    ))
+    await db.commit()
+    await db.refresh(copy)
+    return copy
+
+
 @router.delete(
     "/{deliverable_id}", status_code=status.HTTP_204_NO_CONTENT,
     summary="Soft-delete a deliverable"
