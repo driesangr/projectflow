@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDeliverablesStore } from '@/stores/deliverables'
 import { useUserStoriesStore } from '@/stores/userStories'
@@ -53,6 +53,18 @@ watch(storiesByStatus, (val) => {
   draggableOnHold.value = [...val.on_hold]
 }, { immediate: true })
 
+function calcDeliverableBV() {
+  const allOrdered = [
+    ...draggableTodo.value,
+    ...draggableInProgress.value,
+    ...draggableDone.value,
+    ...draggableOnHold.value,
+  ]
+  const n = allOrdered.length
+  if (n === 0) return Promise.resolve()
+  return storiesStore.setValues(allOrdered.map((s, i) => ({ id: s.id, business_value: (n - i) * 10 })))
+}
+
 async function onStoryChange(status: UserStory['status'], column: UserStory[], evt: any) {
   if (evt.added) {
     isDragging.value = true
@@ -62,7 +74,12 @@ async function onStoryChange(status: UserStory['status'], column: UserStory[], e
     } finally {
       isDragging.value = false
     }
-  } else if (evt.moved || evt.removed) {
+    await nextTick()
+    await calcDeliverableBV()
+  } else if (evt.moved) {
+    await storiesStore.reorder(column.map((s, i) => ({ id: s.id, position: i })))
+    await calcDeliverableBV()
+  } else if (evt.removed) {
     await storiesStore.reorder(column.map((s, i) => ({ id: s.id, position: i })))
   }
 }
