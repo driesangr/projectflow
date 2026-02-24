@@ -28,6 +28,25 @@ const editTarget = ref<Topic | null>(null)
 const deleteTarget = ref<Topic | null>(null)
 const deleting = ref(false)
 
+type SortKey = 'business_value' | 'title' | 'created_at'
+const sortKey = ref<SortKey>('business_value')
+
+const sortedTopics = computed(() => {
+  return [...topicsStore.topics].sort((a, b) => {
+    if (sortKey.value === 'business_value') {
+      // Higher value = more important = comes first; null goes to the end
+      const aVal = a.business_value ?? -1
+      const bVal = b.business_value ?? -1
+      return bVal - aVal
+    }
+    if (sortKey.value === 'title') {
+      return a.title.localeCompare(b.title)
+    }
+    // created_at ascending (oldest first)
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  })
+})
+
 const breadcrumbs = computed(() => [
   { label: 'Projects', to: '/projects' },
   { label: projectsStore.current?.title ?? '…' },
@@ -95,10 +114,17 @@ async function handleDelete() {
       <!-- Topics section -->
       <div class="flex items-center justify-between mb-3">
         <h2 class="section-title mb-0">Topics</h2>
-        <button class="btn-primary btn-sm" @click="showCreate = true">
-          <PlusIcon class="h-3.5 w-3.5" />
-          Add Topic
-        </button>
+        <div class="flex items-center gap-2">
+          <select v-model="sortKey" class="form-select py-1 text-xs">
+            <option value="business_value">Business Value</option>
+            <option value="title">Alphabetisch</option>
+            <option value="created_at">Anlagedatum</option>
+          </select>
+          <button class="btn-primary btn-sm" @click="showCreate = true">
+            <PlusIcon class="h-3.5 w-3.5" />
+            Add Topic
+          </button>
+        </div>
       </div>
 
       <ErrorBanner v-if="topicsStore.error" :message="topicsStore.error" class="mb-3" />
@@ -113,7 +139,7 @@ async function handleDelete() {
 
       <div v-else class="space-y-2">
         <div
-          v-for="topic in topicsStore.topics"
+          v-for="topic in sortedTopics"
           :key="topic.id"
           class="card group"
         >

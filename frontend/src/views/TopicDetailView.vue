@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useTopicsStore } from '@/stores/topics'
 import { useDeliverablesStore } from '@/stores/deliverables'
 import { useApi } from '@/composables/useApi'
-import type { Deliverable, DeliverableCreate } from '@/types'
+import type { Deliverable, DeliverableCreate, TopicCreate } from '@/types'
 import Breadcrumb from '@/components/layout/Breadcrumb.vue'
 import Modal from '@/components/common/Modal.vue'
 import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
@@ -14,6 +14,7 @@ import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
+import TopicForm from '@/components/forms/TopicForm.vue'
 import { PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -24,9 +25,11 @@ const deliverablesStore = useDeliverablesStore()
 const { loading: saving, error: saveError, execute } = useApi()
 
 const showCreate = ref(false)
+const showEditTopic = ref(false)
 const editTarget = ref<Deliverable | null>(null)
 const deleteTarget = ref<Deliverable | null>(null)
 const deleting = ref(false)
+const businessValue = ref<number | null>(null)
 
 const breadcrumbs = computed(() => {
   const topic = topicsStore.current
@@ -39,8 +42,21 @@ const breadcrumbs = computed(() => {
 
 onMounted(async () => {
   await topicsStore.fetchOne(topicId)
+  businessValue.value = topicsStore.current?.business_value ?? null
   await deliverablesStore.fetchAll(topicId)
 })
+
+async function saveBusinessValue() {
+  await topicsStore.update(topicId, { business_value: businessValue.value })
+}
+
+async function handleTopicEdit(data: TopicCreate) {
+  const result = await execute(() => topicsStore.update(topicId, data))
+  if (result) {
+    businessValue.value = topicsStore.current?.business_value ?? null
+    showEditTopic.value = false
+  }
+}
 
 async function handleCreate(data: DeliverableCreate) {
   const result = await execute(() => deliverablesStore.create(data))
@@ -80,11 +96,27 @@ async function handleDelete() {
             <MaturityBar :percent="topicsStore.current.maturity_percent" />
           </div>
         </div>
+        <button class="btn-secondary btn-sm" @click="showEditTopic = true">
+          <PencilSquareIcon class="h-4 w-4" />
+          Edit Topic
+        </button>
       </div>
 
-      <p v-if="topicsStore.current.description" class="text-sm text-gray-600 mb-6">
+      <p v-if="topicsStore.current.description" class="text-sm text-gray-600 mb-4">
         {{ topicsStore.current.description }}
       </p>
+
+      <div class="mb-6">
+        <label class="form-label">Business Value</label>
+        <input
+          v-model.number="businessValue"
+          type="number"
+          min="0"
+          class="form-input w-36"
+          placeholder="0–100"
+          @blur="saveBusinessValue"
+        />
+      </div>
 
       <!-- Deliverables section -->
       <div class="flex items-center justify-between mb-3">
@@ -159,5 +191,18 @@ async function handleDelete() {
       @close="deleteTarget = null"
       @confirm="handleDelete"
     />
+
+    <!-- Edit Topic Modal -->
+    <Modal :open="showEditTopic" title="Edit Topic" @close="showEditTopic = false">
+      <ErrorBanner v-if="saveError" :message="saveError" class="mb-3" />
+      <TopicForm
+        v-if="topicsStore.current"
+        :project-id="topicsStore.current.project_id"
+        :initial="topicsStore.current"
+        :loading="saving"
+        @submit="handleTopicEdit"
+        @cancel="showEditTopic = false"
+      />
+    </Modal>
   </div>
 </template>
