@@ -14,7 +14,7 @@ import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const projectId = route.params.projectId as string
@@ -29,21 +29,23 @@ const deleteTarget = ref<Topic | null>(null)
 const deleting = ref(false)
 
 type SortKey = 'business_value' | 'title' | 'created_at'
+type SortDir = 'asc' | 'desc'
 const sortKey = ref<SortKey>('business_value')
+const sortDir = ref<SortDir>('desc')
 
 const sortedTopics = computed(() => {
   return [...topicsStore.topics].sort((a, b) => {
+    let result = 0
     if (sortKey.value === 'business_value') {
-      // Higher value = more important = comes first; null goes to the end
       const aVal = a.business_value ?? -1
       const bVal = b.business_value ?? -1
-      return bVal - aVal
+      result = aVal - bVal
+    } else if (sortKey.value === 'title') {
+      result = a.title.localeCompare(b.title)
+    } else {
+      result = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     }
-    if (sortKey.value === 'title') {
-      return a.title.localeCompare(b.title)
-    }
-    // created_at ascending (oldest first)
-    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    return sortDir.value === 'asc' ? result : -result
   })
 })
 
@@ -120,6 +122,14 @@ async function handleDelete() {
             <option value="title">Alphabetisch</option>
             <option value="created_at">Anlagedatum</option>
           </select>
+          <button
+            class="btn-icon"
+            :title="sortDir === 'asc' ? 'Aufsteigend' : 'Absteigend'"
+            @click="sortDir = sortDir === 'asc' ? 'desc' : 'asc'"
+          >
+            <ArrowUpIcon v-if="sortDir === 'asc'" class="h-3.5 w-3.5" />
+            <ArrowDownIcon v-else class="h-3.5 w-3.5" />
+          </button>
           <button class="btn-primary btn-sm" @click="showCreate = true">
             <PlusIcon class="h-3.5 w-3.5" />
             Add Topic

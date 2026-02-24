@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useDeliverablesStore } from '@/stores/deliverables'
 import { useUserStoriesStore } from '@/stores/userStories'
 import { useApi } from '@/composables/useApi'
-import type { UserStory, UserStoryCreate } from '@/types'
+import type { UserStory, UserStoryCreate, DeliverableCreate } from '@/types'
 import Breadcrumb from '@/components/layout/Breadcrumb.vue'
 import Modal from '@/components/common/Modal.vue'
 import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
@@ -14,6 +14,7 @@ import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import UserStoryForm from '@/components/forms/UserStoryForm.vue'
+import DeliverableForm from '@/components/forms/DeliverableForm.vue'
 import { PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -24,6 +25,7 @@ const storiesStore = useUserStoriesStore()
 const { loading: saving, error: saveError, execute } = useApi()
 
 const showCreate = ref(false)
+const showEditDeliverable = ref(false)
 const editTarget = ref<UserStory | null>(null)
 const deleteTarget = ref<UserStory | null>(null)
 const deleting = ref(false)
@@ -54,6 +56,11 @@ onMounted(async () => {
     projectId.value = topic.project_id
   }
 })
+
+async function handleDeliverableEdit(data: DeliverableCreate) {
+  const result = await execute(() => deliverablesStore.update(deliverableId, data))
+  if (result) showEditDeliverable.value = false
+}
 
 async function handleCreate(data: UserStoryCreate) {
   const result = await execute(() => storiesStore.create(data))
@@ -98,6 +105,10 @@ async function handleDelete() {
             <MaturityBar :percent="deliverablesStore.current.maturity_percent" />
           </div>
         </div>
+        <button class="btn-secondary btn-sm" @click="showEditDeliverable = true">
+          <PencilSquareIcon class="h-4 w-4" />
+          Edit Deliverable
+        </button>
       </div>
 
       <p v-if="deliverablesStore.current.description" class="text-sm text-gray-600 mb-6">
@@ -183,5 +194,18 @@ async function handleDelete() {
       @close="deleteTarget = null"
       @confirm="handleDelete"
     />
+
+    <!-- Edit Deliverable Modal -->
+    <Modal :open="showEditDeliverable" title="Edit Deliverable" @close="showEditDeliverable = false">
+      <ErrorBanner v-if="saveError" :message="saveError" class="mb-3" />
+      <DeliverableForm
+        v-if="deliverablesStore.current"
+        :topic-id="deliverablesStore.current.topic_id"
+        :initial="deliverablesStore.current"
+        :loading="saving"
+        @submit="handleDeliverableEdit"
+        @cancel="showEditDeliverable = false"
+      />
+    </Modal>
   </div>
 </template>

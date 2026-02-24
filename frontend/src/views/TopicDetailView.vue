@@ -15,7 +15,7 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const topicId = route.params.topicId as string
@@ -30,6 +30,29 @@ const editTarget = ref<Deliverable | null>(null)
 const deleteTarget = ref<Deliverable | null>(null)
 const deleting = ref(false)
 const businessValue = ref<number | null>(null)
+
+type DeliverableSortKey = 'status' | 'title' | 'created_at'
+type SortDir = 'asc' | 'desc'
+const deliverableSortKey = ref<DeliverableSortKey>('status')
+const deliverableSortDir = ref<SortDir>('asc')
+
+const DELIVERABLE_STATUS_ORDER: Record<string, number> = {
+  todo: 0, in_progress: 1, done: 2, on_hold: 3,
+}
+
+const sortedDeliverables = computed(() => {
+  return [...deliverablesStore.deliverables].sort((a, b) => {
+    let result = 0
+    if (deliverableSortKey.value === 'status') {
+      result = (DELIVERABLE_STATUS_ORDER[a.status] ?? 99) - (DELIVERABLE_STATUS_ORDER[b.status] ?? 99)
+    } else if (deliverableSortKey.value === 'title') {
+      result = a.title.localeCompare(b.title)
+    } else {
+      result = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    }
+    return deliverableSortDir.value === 'asc' ? result : -result
+  })
+})
 
 const breadcrumbs = computed(() => {
   const topic = topicsStore.current
@@ -121,10 +144,25 @@ async function handleDelete() {
       <!-- Deliverables section -->
       <div class="flex items-center justify-between mb-3">
         <h2 class="section-title mb-0">Deliverables</h2>
-        <button class="btn-primary btn-sm" @click="showCreate = true">
-          <PlusIcon class="h-3.5 w-3.5" />
-          Add Deliverable
-        </button>
+        <div class="flex items-center gap-2">
+          <select v-model="deliverableSortKey" class="form-select py-1 text-xs">
+            <option value="status">Status</option>
+            <option value="title">Alphabetisch</option>
+            <option value="created_at">Anlagedatum</option>
+          </select>
+          <button
+            class="btn-icon"
+            :title="deliverableSortDir === 'asc' ? 'Aufsteigend' : 'Absteigend'"
+            @click="deliverableSortDir = deliverableSortDir === 'asc' ? 'desc' : 'asc'"
+          >
+            <ArrowUpIcon v-if="deliverableSortDir === 'asc'" class="h-3.5 w-3.5" />
+            <ArrowDownIcon v-else class="h-3.5 w-3.5" />
+          </button>
+          <button class="btn-primary btn-sm" @click="showCreate = true">
+            <PlusIcon class="h-3.5 w-3.5" />
+            Add Deliverable
+          </button>
+        </div>
       </div>
 
       <ErrorBanner v-if="deliverablesStore.error" :message="deliverablesStore.error" class="mb-3" />
@@ -138,7 +176,7 @@ async function handleDelete() {
       </EmptyState>
 
       <div v-else class="space-y-2">
-        <div v-for="d in deliverablesStore.deliverables" :key="d.id" class="card group">
+        <div v-for="d in sortedDeliverables" :key="d.id" class="card group">
           <div class="card-body">
             <div class="flex items-start gap-3">
               <div class="flex-1 min-w-0">
