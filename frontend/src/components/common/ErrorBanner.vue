@@ -1,0 +1,9 @@
+<script setup lang="ts">
+defineProps<{ message: string }>()
+</script>
+
+<template>
+  <div class="rounded-md bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+    {{ message }}
+  </div>
+</template>
