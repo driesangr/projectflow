@@ -15,7 +15,7 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
@@ -32,37 +32,32 @@ const deleteTarget = ref<Deliverable | null>(null)
 const deleting = ref(false)
 const businessValue = ref<number | null>(null)
 
-type DeliverableSortKey = 'position' | 'status' | 'title' | 'created_at'
-type SortDir = 'asc' | 'desc'
-const deliverableSortKey = ref<DeliverableSortKey>('position')
-const deliverableSortDir = ref<SortDir>('asc')
+const deliverablesByStatus = computed(() => ({
+  todo: [...deliverablesStore.deliverables.filter(d => d.status === 'todo')].sort((a, b) => a.position - b.position),
+  in_progress: [...deliverablesStore.deliverables.filter(d => d.status === 'in_progress')].sort((a, b) => a.position - b.position),
+  done: [...deliverablesStore.deliverables.filter(d => d.status === 'done')].sort((a, b) => a.position - b.position),
+  on_hold: [...deliverablesStore.deliverables.filter(d => d.status === 'on_hold')].sort((a, b) => a.position - b.position),
+}))
 
-const DELIVERABLE_STATUS_ORDER: Record<string, number> = {
-  todo: 0, in_progress: 1, done: 2, on_hold: 3,
+const draggableTodo = ref<Deliverable[]>([])
+const draggableInProgress = ref<Deliverable[]>([])
+const draggableDone = ref<Deliverable[]>([])
+const draggableOnHold = ref<Deliverable[]>([])
+
+watch(deliverablesByStatus, (val) => {
+  draggableTodo.value = [...val.todo]
+  draggableInProgress.value = [...val.in_progress]
+  draggableDone.value = [...val.done]
+  draggableOnHold.value = [...val.on_hold]
+}, { immediate: true })
+
+async function onColumnDragEnd(column: Deliverable[]) {
+  await deliverablesStore.reorder(column.map((d, idx) => ({ id: d.id, position: idx })))
 }
 
-const sortedDeliverables = computed(() => {
-  return [...deliverablesStore.deliverables].sort((a, b) => {
-    let result = 0
-    if (deliverableSortKey.value === 'position') {
-      result = a.position - b.position
-    } else if (deliverableSortKey.value === 'status') {
-      result = (DELIVERABLE_STATUS_ORDER[a.status] ?? 99) - (DELIVERABLE_STATUS_ORDER[b.status] ?? 99)
-    } else if (deliverableSortKey.value === 'title') {
-      result = a.title.localeCompare(b.title)
-    } else {
-      result = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    }
-    return deliverableSortDir.value === 'asc' ? result : -result
-  })
-})
-
-const draggableDeliverables = ref<typeof deliverablesStore.deliverables>([])
-watch(sortedDeliverables, (val) => { draggableDeliverables.value = [...val] }, { immediate: true })
-
-async function onDeliverableDragEnd() {
-  if (deliverableSortKey.value !== 'position') return
-  await deliverablesStore.reorder(draggableDeliverables.value.map((d, idx) => ({ id: d.id, position: idx })))
+async function quickStatusToggle(d: Deliverable) {
+  const next = d.status === 'todo' ? 'in_progress' : d.status === 'in_progress' ? 'done' : 'todo'
+  await deliverablesStore.update(d.id, { status: next })
 }
 
 const breadcrumbs = computed(() => {
@@ -156,29 +151,13 @@ async function handleDuplicate(id: string) {
         />
       </div>
 
-      <!-- Deliverables section -->
+      <!-- Deliverables Kanban -->
       <div class="flex items-center justify-between mb-3">
         <h2 class="section-title mb-0">Deliverables</h2>
-        <div class="flex items-center gap-2">
-          <select v-model="deliverableSortKey" class="form-select py-1 text-xs">
-            <option value="position">Manuell</option>
-            <option value="status">Status</option>
-            <option value="title">Alphabetisch</option>
-            <option value="created_at">Anlagedatum</option>
-          </select>
-          <button
-            class="btn-icon"
-            :title="deliverableSortDir === 'asc' ? 'Aufsteigend' : 'Absteigend'"
-            @click="deliverableSortDir = deliverableSortDir === 'asc' ? 'desc' : 'asc'"
-          >
-            <ArrowUpIcon v-if="deliverableSortDir === 'asc'" class="h-3.5 w-3.5" />
-            <ArrowDownIcon v-else class="h-3.5 w-3.5" />
-          </button>
-          <button class="btn-primary btn-sm" @click="showCreate = true">
-            <PlusIcon class="h-3.5 w-3.5" />
-            Add Deliverable
-          </button>
-        </div>
+        <button class="btn-primary btn-sm" @click="showCreate = true">
+          <PlusIcon class="h-3.5 w-3.5" />
+          Add Deliverable
+        </button>
       </div>
 
       <ErrorBanner v-if="deliverablesStore.error" :message="deliverablesStore.error" class="mb-3" />
@@ -191,50 +170,142 @@ async function handleDuplicate(id: string) {
         </button>
       </EmptyState>
 
-      <draggable
-        v-else
-        v-model="draggableDeliverables"
-        class="space-y-2"
-        item-key="id"
-        handle=".drag-handle"
-        animation="150"
-        :disabled="deliverableSortKey !== 'position'"
-        @end="onDeliverableDragEnd"
-      >
-        <template #item="{ element: d }">
-          <div class="card group">
-            <div class="card-body">
-              <div class="flex items-start gap-3">
-                <Bars3Icon
-                  v-if="deliverableSortKey === 'position'"
-                  class="drag-handle h-5 w-5 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5"
-                />
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 mb-1">
-                    <RouterLink
-                      :to="`/deliverables/${d.id}`"
-                      class="font-medium text-gray-900 hover:text-brand-600 truncate"
-                    >
-                      {{ d.title }}
-                    </RouterLink>
-                    <StatusBadge :status="d.status" />
-                    <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- To Do -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+            To Do ({{ deliverablesByStatus.todo.length }})
+          </h3>
+          <draggable v-model="draggableTodo" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableTodo)">
+            <template #item="{ element: d }">
+              <div class="card group">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <button class="mt-0.5 text-gray-300 hover:text-blue-500 transition-colors flex-shrink-0" title="Mark in-progress" @click="quickStatusToggle(d)">
+                      <ClockIcon class="h-4 w-4" />
+                    </button>
+                    <div class="flex-1 min-w-0">
+                      <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ d.title }}</RouterLink>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
+                        <span v-if="d.business_value != null" class="text-xs text-gray-400">BV {{ d.business_value }}</span>
+                      </div>
+                      <div class="mt-1.5"><MaturityBar :percent="d.maturity_percent" /></div>
+                    </div>
+                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" title="Edit" @click="editTarget = d"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon" title="Duplicate" @click="handleDuplicate(d.id)"><DocumentDuplicateIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" title="Delete" @click="deleteTarget = d"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
                   </div>
-                  <p v-if="d.description" class="text-sm text-gray-500 line-clamp-1 mb-2">
-                    {{ d.description }}
-                  </p>
-                  <MaturityBar :percent="d.maturity_percent" />
-                </div>
-                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                  <button class="btn-icon" title="Edit" @click="editTarget = d"><PencilSquareIcon class="h-4 w-4" /></button>
-                  <button class="btn-icon" title="Duplicate" @click="handleDuplicate(d.id)"><DocumentDuplicateIcon class="h-4 w-4" /></button>
-                  <button class="btn-icon text-red-500 hover:text-red-700 hover:bg-red-50" title="Delete" @click="deleteTarget = d"><TrashIcon class="h-4 w-4" /></button>
                 </div>
               </div>
-            </div>
-          </div>
-        </template>
-      </draggable>
+            </template>
+          </draggable>
+        </div>
+
+        <!-- In Progress -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-blue-500 mb-2">
+            In Progress ({{ deliverablesByStatus.in_progress.length }})
+          </h3>
+          <draggable v-model="draggableInProgress" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableInProgress)">
+            <template #item="{ element: d }">
+              <div class="card group border-blue-200">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <button class="mt-0.5 text-blue-400 hover:text-green-500 transition-colors flex-shrink-0" title="Mark done" @click="quickStatusToggle(d)">
+                      <ClockIcon class="h-4 w-4" />
+                    </button>
+                    <div class="flex-1 min-w-0">
+                      <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ d.title }}</RouterLink>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
+                        <span v-if="d.business_value != null" class="text-xs text-gray-400">BV {{ d.business_value }}</span>
+                      </div>
+                      <div class="mt-1.5"><MaturityBar :percent="d.maturity_percent" /></div>
+                    </div>
+                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" title="Edit" @click="editTarget = d"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon" title="Duplicate" @click="handleDuplicate(d.id)"><DocumentDuplicateIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" title="Delete" @click="deleteTarget = d"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </draggable>
+        </div>
+
+        <!-- Done -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-green-600 mb-2">
+            Done ({{ deliverablesByStatus.done.length }})
+          </h3>
+          <draggable v-model="draggableDone" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableDone)">
+            <template #item="{ element: d }">
+              <div class="card group opacity-75">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <button class="mt-0.5 text-green-500 hover:text-gray-400 transition-colors flex-shrink-0" title="Mark to-do" @click="quickStatusToggle(d)">
+                      <CheckCircleIcon class="h-4 w-4" />
+                    </button>
+                    <div class="flex-1 min-w-0">
+                      <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ d.title }}</RouterLink>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
+                        <span v-if="d.business_value != null" class="text-xs text-gray-400">BV {{ d.business_value }}</span>
+                      </div>
+                      <div class="mt-1.5"><MaturityBar :percent="d.maturity_percent" /></div>
+                    </div>
+                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" title="Edit" @click="editTarget = d"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon" title="Duplicate" @click="handleDuplicate(d.id)"><DocumentDuplicateIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" title="Delete" @click="deleteTarget = d"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </draggable>
+        </div>
+
+        <!-- On Hold -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-yellow-600 mb-2">
+            On Hold ({{ deliverablesByStatus.on_hold.length }})
+          </h3>
+          <draggable v-model="draggableOnHold" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableOnHold)">
+            <template #item="{ element: d }">
+              <div class="card group border-yellow-200">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <div class="flex-1 min-w-0">
+                      <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2 block">{{ d.title }}</RouterLink>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
+                        <span v-if="d.business_value != null" class="text-xs text-gray-400">BV {{ d.business_value }}</span>
+                      </div>
+                      <div class="mt-1.5"><MaturityBar :percent="d.maturity_percent" /></div>
+                    </div>
+                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" title="Edit" @click="editTarget = d"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon" title="Duplicate" @click="handleDuplicate(d.id)"><DocumentDuplicateIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" title="Delete" @click="deleteTarget = d"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </draggable>
+        </div>
+
+      </div>
     </template>
 
     <Modal :open="showCreate" title="New Deliverable" @close="showCreate = false">

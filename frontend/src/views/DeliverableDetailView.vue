@@ -15,7 +15,7 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import UserStoryForm from '@/components/forms/UserStoryForm.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
@@ -32,37 +32,32 @@ const editTarget = ref<UserStory | null>(null)
 const deleteTarget = ref<UserStory | null>(null)
 const deleting = ref(false)
 
-type StorySortKey = 'position' | 'status' | 'title' | 'created_at'
-type SortDir = 'asc' | 'desc'
-const storySortKey = ref<StorySortKey>('position')
-const storySortDir = ref<SortDir>('asc')
+const storiesByStatus = computed(() => ({
+  todo: [...storiesStore.userStories.filter(s => s.status === 'todo')].sort((a, b) => a.position - b.position),
+  in_progress: [...storiesStore.userStories.filter(s => s.status === 'in_progress')].sort((a, b) => a.position - b.position),
+  done: [...storiesStore.userStories.filter(s => s.status === 'done')].sort((a, b) => a.position - b.position),
+  on_hold: [...storiesStore.userStories.filter(s => s.status === 'on_hold')].sort((a, b) => a.position - b.position),
+}))
 
-const STORY_STATUS_ORDER: Record<string, number> = {
-  todo: 0, in_progress: 1, done: 2, on_hold: 3,
+const draggableTodo = ref<UserStory[]>([])
+const draggableInProgress = ref<UserStory[]>([])
+const draggableDone = ref<UserStory[]>([])
+const draggableOnHold = ref<UserStory[]>([])
+
+watch(storiesByStatus, (val) => {
+  draggableTodo.value = [...val.todo]
+  draggableInProgress.value = [...val.in_progress]
+  draggableDone.value = [...val.done]
+  draggableOnHold.value = [...val.on_hold]
+}, { immediate: true })
+
+async function onColumnDragEnd(column: UserStory[]) {
+  await storiesStore.reorder(column.map((s, idx) => ({ id: s.id, position: idx })))
 }
 
-const sortedStories = computed(() => {
-  return [...storiesStore.userStories].sort((a, b) => {
-    let result = 0
-    if (storySortKey.value === 'position') {
-      result = a.position - b.position
-    } else if (storySortKey.value === 'status') {
-      result = (STORY_STATUS_ORDER[a.status] ?? 99) - (STORY_STATUS_ORDER[b.status] ?? 99)
-    } else if (storySortKey.value === 'title') {
-      result = a.title.localeCompare(b.title)
-    } else {
-      result = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    }
-    return storySortDir.value === 'asc' ? result : -result
-  })
-})
-
-const draggableStories = ref<typeof storiesStore.userStories>([])
-watch(sortedStories, (val) => { draggableStories.value = [...val] }, { immediate: true })
-
-async function onStoryDragEnd() {
-  if (storySortKey.value !== 'position') return
-  await storiesStore.reorder(draggableStories.value.map((s, idx) => ({ id: s.id, position: idx })))
+async function quickStatusToggle(s: UserStory) {
+  const next = s.status === 'todo' ? 'in_progress' : s.status === 'in_progress' ? 'done' : 'todo'
+  await storiesStore.update(s.id, { status: next })
 }
 
 const breadcrumbs = computed(() => {
@@ -74,17 +69,12 @@ const breadcrumbs = computed(() => {
   ]
 })
 
-// We need the project_id for the UserStoryForm sprint selector
-// We'll store it after fetching the deliverable → topic → project chain is complex,
-// so we pass the topic_id as projectId proxy; the form fetches sprints by project
-// Actually we need project_id. Let's derive it by fetching the topic.
 const projectId = ref<string>('')
 
 onMounted(async () => {
   await deliverablesStore.fetchOne(deliverableId)
   await storiesStore.fetchAll(deliverableId)
 
-  // Fetch topic to get project_id for sprint selector
   if (deliverablesStore.current) {
     const { getTopic } = await import('@/api/topics')
     const topic = await getTopic(deliverablesStore.current.topic_id)
@@ -164,29 +154,13 @@ async function handleDelete() {
         {{ deliverablesStore.current.description }}
       </p>
 
-      <!-- User Stories -->
+      <!-- User Stories Kanban -->
       <div class="flex items-center justify-between mb-3">
         <h2 class="section-title mb-0">User Stories</h2>
-        <div class="flex items-center gap-2">
-          <select v-model="storySortKey" class="form-select py-1 text-xs">
-            <option value="position">Manuell</option>
-            <option value="status">Status</option>
-            <option value="title">Alphabetisch</option>
-            <option value="created_at">Anlagedatum</option>
-          </select>
-          <button
-            class="btn-icon"
-            :title="storySortDir === 'asc' ? 'Aufsteigend' : 'Absteigend'"
-            @click="storySortDir = storySortDir === 'asc' ? 'desc' : 'asc'"
-          >
-            <ArrowUpIcon v-if="storySortDir === 'asc'" class="h-3.5 w-3.5" />
-            <ArrowDownIcon v-else class="h-3.5 w-3.5" />
-          </button>
-          <button class="btn-primary btn-sm" @click="showCreate = true">
-            <PlusIcon class="h-3.5 w-3.5" />
-            Add Story
-          </button>
-        </div>
+        <button class="btn-primary btn-sm" @click="showCreate = true">
+          <PlusIcon class="h-3.5 w-3.5" />
+          Add Story
+        </button>
       </div>
 
       <ErrorBanner v-if="storiesStore.error" :message="storiesStore.error" class="mb-3" />
@@ -199,48 +173,133 @@ async function handleDelete() {
         </button>
       </EmptyState>
 
-      <draggable
-        v-else
-        v-model="draggableStories"
-        class="space-y-2"
-        item-key="id"
-        handle=".drag-handle"
-        animation="150"
-        :disabled="storySortKey !== 'position'"
-        @end="onStoryDragEnd"
-      >
-        <template #item="{ element: story }">
-          <div class="card group">
-            <div class="card-body">
-              <div class="flex items-start gap-3">
-                <Bars3Icon
-                  v-if="storySortKey === 'position'"
-                  class="drag-handle h-5 w-5 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5"
-                />
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 mb-1">
-                    <RouterLink
-                      :to="`/user-stories/${story.id}`"
-                      class="font-medium text-gray-900 hover:text-brand-600 truncate"
-                    >
-                      {{ story.title }}
-                    </RouterLink>
-                    <StatusBadge :status="story.status" />
-                    <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- To Do -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+            To Do ({{ storiesByStatus.todo.length }})
+          </h3>
+          <draggable v-model="draggableTodo" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableTodo)">
+            <template #item="{ element: story }">
+              <div class="card group">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <button class="mt-0.5 text-gray-300 hover:text-blue-500 transition-colors flex-shrink-0" title="Mark in-progress" @click="quickStatusToggle(story)">
+                      <ClockIcon class="h-4 w-4" />
+                    </button>
+                    <div class="flex-1 min-w-0">
+                      <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
+                        <span v-if="story.owner_name" class="text-xs text-gray-400">{{ story.owner_name }}</span>
+                      </div>
+                    </div>
+                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="editTarget = story"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = story"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
                   </div>
-                  <p v-if="story.description" class="text-sm text-gray-500 line-clamp-1">
-                    {{ story.description }}
-                  </p>
-                </div>
-                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                  <button class="btn-icon" @click="editTarget = story"><PencilSquareIcon class="h-4 w-4" /></button>
-                  <button class="btn-icon text-red-500 hover:text-red-700 hover:bg-red-50" @click="deleteTarget = story"><TrashIcon class="h-4 w-4" /></button>
                 </div>
               </div>
-            </div>
-          </div>
-        </template>
-      </draggable>
+            </template>
+          </draggable>
+        </div>
+
+        <!-- In Progress -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-blue-500 mb-2">
+            In Progress ({{ storiesByStatus.in_progress.length }})
+          </h3>
+          <draggable v-model="draggableInProgress" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableInProgress)">
+            <template #item="{ element: story }">
+              <div class="card group border-blue-200">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <button class="mt-0.5 text-blue-400 hover:text-green-500 transition-colors flex-shrink-0" title="Mark done" @click="quickStatusToggle(story)">
+                      <ClockIcon class="h-4 w-4" />
+                    </button>
+                    <div class="flex-1 min-w-0">
+                      <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
+                        <span v-if="story.owner_name" class="text-xs text-gray-400">{{ story.owner_name }}</span>
+                      </div>
+                    </div>
+                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="editTarget = story"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = story"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </draggable>
+        </div>
+
+        <!-- Done -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-green-600 mb-2">
+            Done ({{ storiesByStatus.done.length }})
+          </h3>
+          <draggable v-model="draggableDone" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableDone)">
+            <template #item="{ element: story }">
+              <div class="card group opacity-75">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <button class="mt-0.5 text-green-500 hover:text-gray-400 transition-colors flex-shrink-0" title="Mark to-do" @click="quickStatusToggle(story)">
+                      <CheckCircleIcon class="h-4 w-4" />
+                    </button>
+                    <div class="flex-1 min-w-0">
+                      <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
+                      </div>
+                    </div>
+                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="editTarget = story"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = story"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </draggable>
+        </div>
+
+        <!-- On Hold -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-yellow-600 mb-2">
+            On Hold ({{ storiesByStatus.on_hold.length }})
+          </h3>
+          <draggable v-model="draggableOnHold" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @end="() => onColumnDragEnd(draggableOnHold)">
+            <template #item="{ element: story }">
+              <div class="card group border-yellow-200">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <div class="flex-1 min-w-0">
+                      <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
+                        <span v-if="story.owner_name" class="text-xs text-gray-400">{{ story.owner_name }}</span>
+                      </div>
+                    </div>
+                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="editTarget = story"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = story"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </draggable>
+        </div>
+
+      </div>
     </template>
 
     <Modal :open="showCreate" title="New User Story" @close="showCreate = false">
