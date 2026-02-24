@@ -83,6 +83,8 @@ export interface UserStory {
   description: string | null
   acceptance_criteria: string | null
   story_points: number | null
+  business_value: number | null
+  sprint_value: number | null
   status: UserStoryStatus
   owner_name: string | null
   deliverable_id: string
@@ -99,6 +101,7 @@ export interface Task {
   description: string | null
   status: TaskStatus
   effort_hours: number | null
+  sprint_value: number | null
   owner_name: string | null
   user_story_id: string
   position: number
@@ -169,6 +172,8 @@ export interface UserStoryCreate {
   description?: string | null
   acceptance_criteria?: string | null
   story_points?: number | null
+  business_value?: number | null
+  sprint_value?: number | null
   status?: UserStoryStatus
   owner_name?: string | null
   deliverable_id: string
@@ -182,6 +187,7 @@ export interface TaskCreate {
   description?: string | null
   status?: TaskStatus
   effort_hours?: number | null
+  sprint_value?: number | null
   owner_name?: string | null
   user_story_id: string
 }

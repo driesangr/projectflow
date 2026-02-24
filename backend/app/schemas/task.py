@@ -14,6 +14,7 @@ class TaskBase(BaseModel):
     description: Optional[str] = None
     status: TaskStatus = TaskStatus.todo
     effort_hours: Optional[float] = None
+    sprint_value: Optional[int] = None
     owner_name: Optional[str] = None
     user_story_id: UUID
 
@@ -27,6 +28,7 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[TaskStatus] = None
     effort_hours: Optional[float] = None
+    sprint_value: Optional[int] = None
     owner_name: Optional[str] = None
 
 

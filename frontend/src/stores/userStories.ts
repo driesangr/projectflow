@@ -9,11 +9,11 @@ export const useUserStoriesStore = defineStore('userStories', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  async function fetchAll(deliverableId?: string, sprintId?: string) {
+  async function fetchAll(deliverableId?: string, sprintId?: string, projectId?: string) {
     loading.value = true
     error.value = null
     try {
-      userStories.value = await api.listUserStories(deliverableId, sprintId)
+      userStories.value = await api.listUserStories(deliverableId, sprintId, projectId)
     } catch (e: any) {
       error.value = e.response?.data?.detail ?? 'Failed to load user stories'
     } finally {

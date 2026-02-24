@@ -28,6 +28,7 @@ class Task(Base, TimestampMixin, SoftDeleteMixin):
         index=True,
     )
     effort_hours: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    sprint_value: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     # Manual drag-and-drop ordering within the parent user story
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     owner_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

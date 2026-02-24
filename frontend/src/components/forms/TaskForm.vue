@@ -18,6 +18,7 @@ const form = reactive({
   description: props.initial?.description ?? '',
   status: props.initial?.status ?? 'todo' as Task['status'],
   effort_hours: props.initial?.effort_hours ?? null as number | null,
+  sprint_value: props.initial?.sprint_value ?? null as number | null,
   owner_name: props.initial?.owner_name ?? '',
 })
 
@@ -27,6 +28,7 @@ function submit() {
     description: form.description || null,
     status: form.status,
     effort_hours: form.effort_hours,
+    sprint_value: form.sprint_value,
     owner_name: form.owner_name || null,
     user_story_id: props.userStoryId,
   })
@@ -55,6 +57,12 @@ function submit() {
       <div>
         <label class="form-label">Effort (hours)</label>
         <input v-model.number="form.effort_hours" type="number" min="0" step="0.5" class="form-input" placeholder="e.g. 4" />
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="form-label">Sprint Value</label>
+        <input v-model.number="form.sprint_value" type="number" min="0" class="form-input" placeholder="Priorität im Sprint" />
       </div>
     </div>
     <div>

@@ -1,10 +1,11 @@
 import apiClient from './client'
 import type { UserStory, UserStoryCreate, UserStoryUpdate } from '@/types'
 
-export async function listUserStories(deliverableId?: string, sprintId?: string): Promise<UserStory[]> {
+export async function listUserStories(deliverableId?: string, sprintId?: string, projectId?: string): Promise<UserStory[]> {
   const params: Record<string, string> = {}
   if (deliverableId) params.deliverable_id = deliverableId
   if (sprintId) params.sprint_id = sprintId
+  if (projectId) params.project_id = projectId
   const { data } = await apiClient.get<UserStory[]>('/user-stories/', { params })
   return data
 }

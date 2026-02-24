@@ -16,6 +16,8 @@ class UserStoryBase(BaseModel):
     description: Optional[str] = None
     acceptance_criteria: Optional[str] = None
     story_points: Optional[int] = None
+    business_value: Optional[int] = None
+    sprint_value: Optional[int] = None
     status: UserStoryStatus = UserStoryStatus.todo
     owner_name: Optional[str] = None
     deliverable_id: UUID
@@ -31,6 +33,8 @@ class UserStoryUpdate(BaseModel):
     description: Optional[str] = None
     acceptance_criteria: Optional[str] = None
     story_points: Optional[int] = None
+    business_value: Optional[int] = None
+    sprint_value: Optional[int] = None
     status: Optional[UserStoryStatus] = None
     owner_name: Optional[str] = None
     sprint_id: Optional[UUID] = None

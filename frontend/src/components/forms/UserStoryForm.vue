@@ -24,6 +24,8 @@ const form = reactive({
   description: props.initial?.description ?? '',
   acceptance_criteria: props.initial?.acceptance_criteria ?? '',
   story_points: props.initial?.story_points ?? null as number | null,
+  business_value: props.initial?.business_value ?? null as number | null,
+  sprint_value: props.initial?.sprint_value ?? null as number | null,
   status: props.initial?.status ?? 'todo' as UserStory['status'],
   owner_name: props.initial?.owner_name ?? '',
   sprint_id: props.initial?.sprint_id ?? null as string | null,
@@ -35,6 +37,8 @@ function submit() {
     description: form.description || null,
     acceptance_criteria: form.acceptance_criteria || null,
     story_points: form.story_points,
+    business_value: form.business_value,
+    sprint_value: form.sprint_value,
     status: form.status,
     owner_name: form.owner_name || null,
     deliverable_id: props.deliverableId,
@@ -70,6 +74,16 @@ function submit() {
       <div>
         <label class="form-label">Story Points</label>
         <input v-model.number="form.story_points" type="number" min="0" class="form-input" placeholder="e.g. 5" />
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="form-label">Business Value</label>
+        <input v-model.number="form.business_value" type="number" min="0" class="form-input" placeholder="0–100" />
+      </div>
+      <div>
+        <label class="form-label">Sprint Value</label>
+        <input v-model.number="form.sprint_value" type="number" min="0" class="form-input" placeholder="Priorität im Sprint" />
       </div>
     </div>
     <div>

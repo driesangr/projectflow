@@ -3,8 +3,9 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { useTopicsStore } from '@/stores/topics'
+import { useUserStoriesStore } from '@/stores/userStories'
 import { useApi } from '@/composables/useApi'
-import type { Topic, TopicCreate } from '@/types'
+import type { Topic, TopicCreate, UserStory } from '@/types'
 import Breadcrumb from '@/components/layout/Breadcrumb.vue'
 import Modal from '@/components/common/Modal.vue'
 import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
@@ -15,6 +16,7 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
 import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import { useSprintsStore } from '@/stores/sprints'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
@@ -22,12 +24,38 @@ const projectId = route.params.projectId as string
 
 const projectsStore = useProjectsStore()
 const topicsStore = useTopicsStore()
+const storiesStore = useUserStoriesStore()
+const sprintsStore = useSprintsStore()
 const { loading: saving, error: saveError, execute } = useApi()
 
 const showCreate = ref(false)
 const editTarget = ref<Topic | null>(null)
 const deleteTarget = ref<Topic | null>(null)
 const deleting = ref(false)
+
+type StorySortKey = 'business_value' | 'title' | 'story_points'
+type SortDirection = 'asc' | 'desc'
+const storySortKey = ref<StorySortKey>('business_value')
+const storySortDir = ref<SortDirection>('desc')
+
+const sortedProjectStories = computed(() => {
+  return [...storiesStore.userStories].sort((a, b) => {
+    let result = 0
+    if (storySortKey.value === 'business_value') {
+      result = (a.business_value ?? -1) - (b.business_value ?? -1)
+    } else if (storySortKey.value === 'story_points') {
+      result = (a.story_points ?? -1) - (b.story_points ?? -1)
+    } else {
+      result = a.title.localeCompare(b.title)
+    }
+    return storySortDir.value === 'asc' ? result : -result
+  })
+})
+
+function sprintName(sprintId: string | null): string {
+  if (!sprintId) return ''
+  return sprintsStore.sprints.find(s => s.id === sprintId)?.name ?? ''
+}
 
 type SortKey = 'position' | 'business_value' | 'title' | 'created_at'
 type SortDir = 'asc' | 'desc'
@@ -68,7 +96,11 @@ const breadcrumbs = computed(() => [
 
 onMounted(async () => {
   await projectsStore.fetchOne(projectId)
-  await topicsStore.fetchAll(projectId)
+  await Promise.all([
+    topicsStore.fetchAll(projectId),
+    storiesStore.fetchAll(undefined, undefined, projectId),
+    sprintsStore.fetchAll(projectId),
+  ])
 })
 
 async function handleCreate(data: TopicCreate) {
@@ -206,6 +238,50 @@ async function handleDelete() {
           </div>
         </template>
       </draggable>
+      <!-- User Stories section -->
+      <div class="flex items-center justify-between mt-8 mb-3">
+        <h2 class="section-title mb-0">User Stories</h2>
+        <div class="flex items-center gap-2">
+          <select v-model="storySortKey" class="form-select py-1 text-xs">
+            <option value="business_value">Business Value</option>
+            <option value="story_points">Story Points</option>
+            <option value="title">Alphabetisch</option>
+          </select>
+          <button
+            class="btn-icon"
+            :title="storySortDir === 'asc' ? 'Aufsteigend' : 'Absteigend'"
+            @click="storySortDir = storySortDir === 'asc' ? 'desc' : 'asc'"
+          >
+            <ArrowUpIcon v-if="storySortDir === 'asc'" class="h-3.5 w-3.5" />
+            <ArrowDownIcon v-else class="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      <LoadingSpinner v-if="storiesStore.loading" />
+      <EmptyState v-else-if="storiesStore.userStories.length === 0" title="No user stories yet" description="Add user stories in the Deliverable detail view." />
+      <div v-else class="space-y-1">
+        <div v-for="story in sortedProjectStories" :key="story.id" class="card">
+          <div class="card-body py-2">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <RouterLink :to="`/user-stories/${story.id}`" class="font-medium text-gray-900 hover:text-brand-600 truncate">
+                    {{ story.title }}
+                  </RouterLink>
+                  <StatusBadge :status="story.status" />
+                </div>
+              </div>
+              <div class="flex items-center gap-3 flex-shrink-0 text-xs text-gray-400">
+                <span v-if="story.business_value != null">BV {{ story.business_value }}</span>
+                <span v-if="story.story_points">{{ story.story_points }} pts</span>
+                <span v-if="story.sprint_id" class="text-brand-600">{{ sprintName(story.sprint_id) }}</span>
+                <span v-if="story.owner_name">{{ story.owner_name }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </template>
 
     <!-- Create Modal -->

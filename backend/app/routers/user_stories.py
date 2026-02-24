@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.audit_log import AuditAction, AuditLog
+from app.models.deliverable import Deliverable
+from app.models.topic import Topic
 from app.models.user import User
 from app.models.user_story import UserStory
 from app.routers.auth import get_current_user
@@ -23,6 +25,7 @@ router = APIRouter(prefix="/user-stories", tags=["user_stories"])
 async def list_user_stories(
     deliverable_id: UUID | None = Query(default=None),
     sprint_id: UUID | None = Query(default=None),
+    project_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ) -> list[UserStory]:
@@ -31,6 +34,15 @@ async def list_user_stories(
         query = query.where(UserStory.deliverable_id == deliverable_id)
     if sprint_id:
         query = query.where(UserStory.sprint_id == sprint_id)
+    if project_id:
+        query = (
+            query
+            .join(Deliverable, UserStory.deliverable_id == Deliverable.id)
+            .join(Topic, Deliverable.topic_id == Topic.id)
+            .where(Topic.project_id == project_id)
+            .where(Deliverable.is_deleted.is_(False))
+            .where(Topic.is_deleted.is_(False))
+        )
     result = await db.execute(query.order_by(UserStory.position.asc(), UserStory.created_at.asc()))
     return result.scalars().all()
 
