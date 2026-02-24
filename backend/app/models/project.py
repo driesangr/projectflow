@@ -51,8 +51,8 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
 
     # Child relations
     topics: Mapped[list["Topic"]] = relationship(  # noqa: F821
-        "Topic", back_populates="project", lazy="select"
+        "Topic", back_populates="project", lazy="selectin"
     )
     sprints: Mapped[list["Sprint"]] = relationship(  # noqa: F821
-        "Sprint", back_populates="project", lazy="select"
+        "Sprint", back_populates="project", lazy="selectin"
     )

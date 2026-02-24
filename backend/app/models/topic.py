@@ -48,5 +48,5 @@ class Topic(Base, TimestampMixin, SoftDeleteMixin):
         "Project", back_populates="topics"
     )
     deliverables: Mapped[list["Deliverable"]] = relationship(  # noqa: F821
-        "Deliverable", back_populates="topic", lazy="select"
+        "Deliverable", back_populates="topic", lazy="selectin"
     )

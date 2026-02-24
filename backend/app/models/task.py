@@ -46,11 +46,11 @@ class Task(Base, TimestampMixin, SoftDeleteMixin):
         "Comment",
         primaryjoin="and_(Comment.task_id == Task.id)",
         back_populates="task",
-        lazy="select",
+        lazy="selectin",
     )
     links: Mapped[list["Link"]] = relationship(  # noqa: F821
         "Link",
         primaryjoin="and_(Link.task_id == Task.id)",
         back_populates="task",
-        lazy="select",
+        lazy="selectin",
     )

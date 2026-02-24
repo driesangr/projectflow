@@ -55,17 +55,17 @@ class UserStory(Base, TimestampMixin, SoftDeleteMixin):
         "Sprint", back_populates="user_stories"
     )
     tasks: Mapped[list["Task"]] = relationship(  # noqa: F821
-        "Task", back_populates="user_story", lazy="select"
+        "Task", back_populates="user_story", lazy="selectin"
     )
     comments: Mapped[list["Comment"]] = relationship(  # noqa: F821
         "Comment",
         primaryjoin="and_(Comment.user_story_id == UserStory.id)",
         back_populates="user_story",
-        lazy="select",
+        lazy="selectin",
     )
     links: Mapped[list["Link"]] = relationship(  # noqa: F821
         "Link",
         primaryjoin="and_(Link.user_story_id == UserStory.id)",
         back_populates="user_story",
-        lazy="select",
+        lazy="selectin",
     )
