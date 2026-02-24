@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { useTopicsStore } from '@/stores/topics'
@@ -14,7 +14,8 @@ import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import draggable from 'vuedraggable'
 
 const route = useRoute()
 const projectId = route.params.projectId as string
@@ -28,15 +29,17 @@ const editTarget = ref<Topic | null>(null)
 const deleteTarget = ref<Topic | null>(null)
 const deleting = ref(false)
 
-type SortKey = 'business_value' | 'title' | 'created_at'
+type SortKey = 'position' | 'business_value' | 'title' | 'created_at'
 type SortDir = 'asc' | 'desc'
-const sortKey = ref<SortKey>('business_value')
-const sortDir = ref<SortDir>('desc')
+const sortKey = ref<SortKey>('position')
+const sortDir = ref<SortDir>('asc')
 
 const sortedTopics = computed(() => {
   return [...topicsStore.topics].sort((a, b) => {
     let result = 0
-    if (sortKey.value === 'business_value') {
+    if (sortKey.value === 'position') {
+      result = a.position - b.position
+    } else if (sortKey.value === 'business_value') {
       const aVal = a.business_value ?? -1
       const bVal = b.business_value ?? -1
       result = aVal - bVal
@@ -48,6 +51,15 @@ const sortedTopics = computed(() => {
     return sortDir.value === 'asc' ? result : -result
   })
 })
+
+// Local list used by draggable (only active when sortKey === 'position')
+const draggableTopics = ref<typeof topicsStore.topics>([])
+watch(sortedTopics, (val) => { draggableTopics.value = [...val] }, { immediate: true })
+
+async function onTopicDragEnd() {
+  if (sortKey.value !== 'position') return
+  await topicsStore.reorder(draggableTopics.value.map((t, idx) => ({ id: t.id, position: idx })))
+}
 
 const breadcrumbs = computed(() => [
   { label: 'Projects', to: '/projects' },
@@ -118,6 +130,7 @@ async function handleDelete() {
         <h2 class="section-title mb-0">Topics</h2>
         <div class="flex items-center gap-2">
           <select v-model="sortKey" class="form-select py-1 text-xs">
+            <option value="position">Manuell</option>
             <option value="business_value">Business Value</option>
             <option value="title">Alphabetisch</option>
             <option value="created_at">Anlagedatum</option>
@@ -147,41 +160,52 @@ async function handleDelete() {
         </button>
       </EmptyState>
 
-      <div v-else class="space-y-2">
-        <div
-          v-for="topic in sortedTopics"
-          :key="topic.id"
-          class="card group"
-        >
-          <div class="card-body">
-            <div class="flex items-start gap-3">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <RouterLink
-                    :to="`/topics/${topic.id}`"
-                    class="font-medium text-gray-900 hover:text-brand-600 truncate"
-                  >
-                    {{ topic.title }}
-                  </RouterLink>
-                  <StatusBadge :status="topic.priority" />
+      <draggable
+        v-else
+        v-model="draggableTopics"
+        class="space-y-2"
+        item-key="id"
+        handle=".drag-handle"
+        animation="150"
+        :disabled="sortKey !== 'position'"
+        @end="onTopicDragEnd"
+      >
+        <template #item="{ element: topic }">
+          <div class="card group">
+            <div class="card-body">
+              <div class="flex items-start gap-3">
+                <Bars3Icon
+                  v-if="sortKey === 'position'"
+                  class="drag-handle h-5 w-5 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5"
+                />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <RouterLink
+                      :to="`/topics/${topic.id}`"
+                      class="font-medium text-gray-900 hover:text-brand-600 truncate"
+                    >
+                      {{ topic.title }}
+                    </RouterLink>
+                    <StatusBadge :status="topic.priority" />
+                  </div>
+                  <p v-if="topic.description" class="text-sm text-gray-500 line-clamp-1 mb-2">
+                    {{ topic.description }}
+                  </p>
+                  <MaturityBar :percent="topic.maturity_percent" />
                 </div>
-                <p v-if="topic.description" class="text-sm text-gray-500 line-clamp-1 mb-2">
-                  {{ topic.description }}
-                </p>
-                <MaturityBar :percent="topic.maturity_percent" />
-              </div>
-              <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                <button class="btn-icon" title="Edit" @click="editTarget = topic">
-                  <PencilSquareIcon class="h-4 w-4" />
-                </button>
-                <button class="btn-icon text-red-500 hover:text-red-700 hover:bg-red-50" title="Delete" @click="deleteTarget = topic">
-                  <TrashIcon class="h-4 w-4" />
-                </button>
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  <button class="btn-icon" title="Edit" @click="editTarget = topic">
+                    <PencilSquareIcon class="h-4 w-4" />
+                  </button>
+                  <button class="btn-icon text-red-500 hover:text-red-700 hover:bg-red-50" title="Delete" @click="deleteTarget = topic">
+                    <TrashIcon class="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </template>
+      </draggable>
     </template>
 
     <!-- Create Modal -->

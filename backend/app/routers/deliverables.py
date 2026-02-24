@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -13,6 +13,7 @@ from app.models.deliverable import Deliverable
 from app.models.user import User
 from app.routers.auth import get_current_user
 from app.schemas.deliverable import DeliverableCreate, DeliverableResponse, DeliverableUpdate
+from app.schemas.reorder import ReorderItem
 from app.services.maturity import recalculate_upwards
 
 router = APIRouter(prefix="/deliverables", tags=["deliverables"])
@@ -27,8 +28,21 @@ async def list_deliverables(
     query = select(Deliverable).where(Deliverable.is_deleted.is_(False))
     if topic_id:
         query = query.where(Deliverable.topic_id == topic_id)
-    result = await db.execute(query.order_by(Deliverable.created_at.desc()))
+    result = await db.execute(query.order_by(Deliverable.position.asc(), Deliverable.created_at.asc()))
     return result.scalars().all()
+
+
+@router.patch("/reorder", status_code=status.HTTP_204_NO_CONTENT, summary="Reorder deliverables")
+async def reorder_deliverables(
+    items: list[ReorderItem],
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> None:
+    for item in items:
+        deliverable = await db.get(Deliverable, item.id)
+        if deliverable and not deliverable.is_deleted:
+            deliverable.position = item.position
+    await db.commit()
 
 
 @router.get(
@@ -55,7 +69,14 @@ async def create_deliverable(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Deliverable:
+    count_res = await db.execute(
+        select(func.count(Deliverable.id)).where(
+            Deliverable.topic_id == payload.topic_id,
+            Deliverable.is_deleted.is_(False),
+        )
+    )
     deliverable = Deliverable(**payload.model_dump())
+    deliverable.position = count_res.scalar() or 0
     db.add(deliverable)
     await db.flush()
 
@@ -106,7 +127,6 @@ async def update_deliverable(
             changes=changes,
         ))
 
-    # A deliverable status change affects topic maturity
     if status_changed:
         from app.services.maturity import calculate_topic_maturity
         await calculate_topic_maturity(deliverable.topic_id, db)
@@ -140,7 +160,6 @@ async def delete_deliverable(
         changed_at=datetime.now(timezone.utc),
         changes={"title": deliverable.title},
     ))
-    # Recalculate topic maturity after removing this deliverable
     from app.services.maturity import calculate_topic_maturity
     await calculate_topic_maturity(deliverable.topic_id, db)
     await db.commit()

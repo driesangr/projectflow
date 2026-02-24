@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -12,6 +12,7 @@ from app.models.audit_log import AuditAction, AuditLog
 from app.models.user import User
 from app.models.user_story import UserStory
 from app.routers.auth import get_current_user
+from app.schemas.reorder import ReorderItem
 from app.schemas.user_story import UserStoryCreate, UserStoryResponse, UserStoryUpdate
 from app.services.maturity import recalculate_upwards
 
@@ -30,8 +31,21 @@ async def list_user_stories(
         query = query.where(UserStory.deliverable_id == deliverable_id)
     if sprint_id:
         query = query.where(UserStory.sprint_id == sprint_id)
-    result = await db.execute(query.order_by(UserStory.created_at.desc()))
+    result = await db.execute(query.order_by(UserStory.position.asc(), UserStory.created_at.asc()))
     return result.scalars().all()
+
+
+@router.patch("/reorder", status_code=status.HTTP_204_NO_CONTENT, summary="Reorder user stories")
+async def reorder_user_stories(
+    items: list[ReorderItem],
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> None:
+    for item in items:
+        story = await db.get(UserStory, item.id)
+        if story and not story.is_deleted:
+            story.position = item.position
+    await db.commit()
 
 
 @router.get(
@@ -58,7 +72,14 @@ async def create_user_story(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> UserStory:
+    count_res = await db.execute(
+        select(func.count(UserStory.id)).where(
+            UserStory.deliverable_id == payload.deliverable_id,
+            UserStory.is_deleted.is_(False),
+        )
+    )
     story = UserStory(**payload.model_dump())
+    story.position = count_res.scalar() or 0
     db.add(story)
     await db.flush()
 
@@ -71,7 +92,6 @@ async def create_user_story(
         changes={"title": story.title},
     ))
 
-    # A new story (defaulting to 'todo') affects deliverable maturity
     await recalculate_upwards("user_story", story.id, db)
     await db.commit()
     await db.refresh(story)
@@ -112,7 +132,6 @@ async def update_user_story(
             changes=changes,
         ))
 
-    # Trigger maturity recalculation whenever the status changes
     if status_changed:
         await recalculate_upwards("user_story", story.id, db)
 
@@ -145,6 +164,5 @@ async def delete_user_story(
         changed_at=datetime.now(timezone.utc),
         changes={"title": story.title},
     ))
-    # Recalculate after logical deletion
     await recalculate_upwards("user_story", story.id, db)
     await db.commit()

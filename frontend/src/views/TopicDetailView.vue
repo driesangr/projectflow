@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTopicsStore } from '@/stores/topics'
 import { useDeliverablesStore } from '@/stores/deliverables'
@@ -15,7 +15,8 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import draggable from 'vuedraggable'
 
 const route = useRoute()
 const topicId = route.params.topicId as string
@@ -31,9 +32,9 @@ const deleteTarget = ref<Deliverable | null>(null)
 const deleting = ref(false)
 const businessValue = ref<number | null>(null)
 
-type DeliverableSortKey = 'status' | 'title' | 'created_at'
+type DeliverableSortKey = 'position' | 'status' | 'title' | 'created_at'
 type SortDir = 'asc' | 'desc'
-const deliverableSortKey = ref<DeliverableSortKey>('status')
+const deliverableSortKey = ref<DeliverableSortKey>('position')
 const deliverableSortDir = ref<SortDir>('asc')
 
 const DELIVERABLE_STATUS_ORDER: Record<string, number> = {
@@ -43,7 +44,9 @@ const DELIVERABLE_STATUS_ORDER: Record<string, number> = {
 const sortedDeliverables = computed(() => {
   return [...deliverablesStore.deliverables].sort((a, b) => {
     let result = 0
-    if (deliverableSortKey.value === 'status') {
+    if (deliverableSortKey.value === 'position') {
+      result = a.position - b.position
+    } else if (deliverableSortKey.value === 'status') {
       result = (DELIVERABLE_STATUS_ORDER[a.status] ?? 99) - (DELIVERABLE_STATUS_ORDER[b.status] ?? 99)
     } else if (deliverableSortKey.value === 'title') {
       result = a.title.localeCompare(b.title)
@@ -53,6 +56,14 @@ const sortedDeliverables = computed(() => {
     return deliverableSortDir.value === 'asc' ? result : -result
   })
 })
+
+const draggableDeliverables = ref<typeof deliverablesStore.deliverables>([])
+watch(sortedDeliverables, (val) => { draggableDeliverables.value = [...val] }, { immediate: true })
+
+async function onDeliverableDragEnd() {
+  if (deliverableSortKey.value !== 'position') return
+  await deliverablesStore.reorder(draggableDeliverables.value.map((d, idx) => ({ id: d.id, position: idx })))
+}
 
 const breadcrumbs = computed(() => {
   const topic = topicsStore.current
@@ -146,6 +157,7 @@ async function handleDelete() {
         <h2 class="section-title mb-0">Deliverables</h2>
         <div class="flex items-center gap-2">
           <select v-model="deliverableSortKey" class="form-select py-1 text-xs">
+            <option value="position">Manuell</option>
             <option value="status">Status</option>
             <option value="title">Alphabetisch</option>
             <option value="created_at">Anlagedatum</option>
@@ -175,34 +187,49 @@ async function handleDelete() {
         </button>
       </EmptyState>
 
-      <div v-else class="space-y-2">
-        <div v-for="d in sortedDeliverables" :key="d.id" class="card group">
-          <div class="card-body">
-            <div class="flex items-start gap-3">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <RouterLink
-                    :to="`/deliverables/${d.id}`"
-                    class="font-medium text-gray-900 hover:text-brand-600 truncate"
-                  >
-                    {{ d.title }}
-                  </RouterLink>
-                  <StatusBadge :status="d.status" />
-                  <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
+      <draggable
+        v-else
+        v-model="draggableDeliverables"
+        class="space-y-2"
+        item-key="id"
+        handle=".drag-handle"
+        animation="150"
+        :disabled="deliverableSortKey !== 'position'"
+        @end="onDeliverableDragEnd"
+      >
+        <template #item="{ element: d }">
+          <div class="card group">
+            <div class="card-body">
+              <div class="flex items-start gap-3">
+                <Bars3Icon
+                  v-if="deliverableSortKey === 'position'"
+                  class="drag-handle h-5 w-5 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5"
+                />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <RouterLink
+                      :to="`/deliverables/${d.id}`"
+                      class="font-medium text-gray-900 hover:text-brand-600 truncate"
+                    >
+                      {{ d.title }}
+                    </RouterLink>
+                    <StatusBadge :status="d.status" />
+                    <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
+                  </div>
+                  <p v-if="d.description" class="text-sm text-gray-500 line-clamp-1 mb-2">
+                    {{ d.description }}
+                  </p>
+                  <MaturityBar :percent="d.maturity_percent" />
                 </div>
-                <p v-if="d.description" class="text-sm text-gray-500 line-clamp-1 mb-2">
-                  {{ d.description }}
-                </p>
-                <MaturityBar :percent="d.maturity_percent" />
-              </div>
-              <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                <button class="btn-icon" @click="editTarget = d"><PencilSquareIcon class="h-4 w-4" /></button>
-                <button class="btn-icon text-red-500 hover:text-red-700 hover:bg-red-50" @click="deleteTarget = d"><TrashIcon class="h-4 w-4" /></button>
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  <button class="btn-icon" @click="editTarget = d"><PencilSquareIcon class="h-4 w-4" /></button>
+                  <button class="btn-icon text-red-500 hover:text-red-700 hover:bg-red-50" @click="deleteTarget = d"><TrashIcon class="h-4 w-4" /></button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </template>
+      </draggable>
     </template>
 
     <Modal :open="showCreate" title="New Deliverable" @close="showCreate = false">

@@ -53,5 +53,9 @@ export const useDeliverablesStore = defineStore('deliverables', () => {
     if (current.value?.id === id) current.value = null
   }
 
-  return { deliverables, current, loading, error, fetchAll, fetchOne, create, update, remove }
+  async function reorder(items: { id: string; position: number }[]) {
+    await api.reorderDeliverables(items)
+  }
+
+  return { deliverables, current, loading, error, fetchAll, fetchOne, create, update, remove, reorder }
 })

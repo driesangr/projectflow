@@ -38,5 +38,9 @@ export const useTasksStore = defineStore('tasks', () => {
     tasks.value = tasks.value.filter((t) => t.id !== id)
   }
 
-  return { tasks, loading, error, fetchAll, create, update, remove }
+  async function reorder(items: { id: string; position: number }[]) {
+    await api.reorderTasks(items)
+  }
+
+  return { tasks, loading, error, fetchAll, create, update, remove, reorder }
 })

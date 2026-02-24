@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -12,6 +12,7 @@ from app.models.audit_log import AuditAction, AuditLog
 from app.models.topic import Topic
 from app.models.user import User
 from app.routers.auth import get_current_user
+from app.schemas.reorder import ReorderItem
 from app.schemas.topic import TopicCreate, TopicResponse, TopicUpdate
 
 router = APIRouter(prefix="/topics", tags=["topics"])
@@ -26,8 +27,21 @@ async def list_topics(
     query = select(Topic).where(Topic.is_deleted.is_(False))
     if project_id:
         query = query.where(Topic.project_id == project_id)
-    result = await db.execute(query.order_by(Topic.business_value.desc().nulls_last()))
+    result = await db.execute(query.order_by(Topic.position.asc(), Topic.created_at.asc()))
     return result.scalars().all()
+
+
+@router.patch("/reorder", status_code=status.HTTP_204_NO_CONTENT, summary="Reorder topics")
+async def reorder_topics(
+    items: list[ReorderItem],
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> None:
+    for item in items:
+        topic = await db.get(Topic, item.id)
+        if topic and not topic.is_deleted:
+            topic.position = item.position
+    await db.commit()
 
 
 @router.get("/{topic_id}", response_model=TopicResponse, summary="Get topic by ID")
@@ -51,7 +65,15 @@ async def create_topic(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Topic:
+    # Assign position after existing siblings
+    count_res = await db.execute(
+        select(func.count(Topic.id)).where(
+            Topic.project_id == payload.project_id,
+            Topic.is_deleted.is_(False),
+        )
+    )
     topic = Topic(**payload.model_dump())
+    topic.position = count_res.scalar() or 0
     db.add(topic)
     await db.flush()
 

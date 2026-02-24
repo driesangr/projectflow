@@ -53,5 +53,9 @@ export const useUserStoriesStore = defineStore('userStories', () => {
     if (current.value?.id === id) current.value = null
   }
 
-  return { userStories, current, loading, error, fetchAll, fetchOne, create, update, remove }
+  async function reorder(items: { id: string; position: number }[]) {
+    await api.reorderUserStories(items)
+  }
+
+  return { userStories, current, loading, error, fetchAll, fetchOne, create, update, remove, reorder }
 })

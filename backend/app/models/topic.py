@@ -23,6 +23,8 @@ class Topic(Base, TimestampMixin, SoftDeleteMixin):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     # Used for frontend sorting; higher value = more valuable
     business_value: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # Manual drag-and-drop ordering within the parent project
+    position: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     priority: Mapped[TopicPriority] = mapped_column(
         Enum(TopicPriority, name="topicpriority"),
         default=TopicPriority.medium,

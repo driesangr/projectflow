@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStoriesStore } from '@/stores/userStories'
 import { useTasksStore } from '@/stores/tasks'
@@ -19,7 +19,9 @@ import {
   TrashIcon,
   CheckCircleIcon,
   ClockIcon,
+  Bars3Icon,
 } from '@heroicons/vue/24/outline'
+import draggable from 'vuedraggable'
 
 const route = useRoute()
 const storyId = route.params.storyId as string
@@ -79,10 +81,25 @@ async function quickStatusToggle(task: Task) {
 }
 
 const tasksByStatus = computed(() => ({
-  todo: tasksStore.tasks.filter((t) => t.status === 'todo'),
-  in_progress: tasksStore.tasks.filter((t) => t.status === 'in_progress'),
-  done: tasksStore.tasks.filter((t) => t.status === 'done'),
+  todo: [...tasksStore.tasks.filter((t) => t.status === 'todo')].sort((a, b) => a.position - b.position),
+  in_progress: [...tasksStore.tasks.filter((t) => t.status === 'in_progress')].sort((a, b) => a.position - b.position),
+  done: [...tasksStore.tasks.filter((t) => t.status === 'done')].sort((a, b) => a.position - b.position),
 }))
+
+// Separate draggable refs for each Kanban column
+const draggableTodo = ref<Task[]>([])
+const draggableInProgress = ref<Task[]>([])
+const draggableDone = ref<Task[]>([])
+
+watch(tasksByStatus, (val) => {
+  draggableTodo.value = [...val.todo]
+  draggableInProgress.value = [...val.in_progress]
+  draggableDone.value = [...val.done]
+}, { immediate: true })
+
+async function onColumnDragEnd(column: Task[]) {
+  await tasksStore.reorder(column.map((t, idx) => ({ id: t.id, position: idx })))
+}
 </script>
 
 <template>
@@ -143,36 +160,42 @@ const tasksByStatus = computed(() => ({
           <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
             To Do ({{ tasksByStatus.todo.length }})
           </h3>
-          <div class="space-y-2">
-            <div
-              v-for="task in tasksByStatus.todo"
-              :key="task.id"
-              class="card group"
-            >
-              <div class="card-body py-3">
-                <div class="flex items-start gap-2">
-                  <button
-                    class="mt-0.5 text-gray-300 hover:text-blue-500 transition-colors flex-shrink-0"
-                    title="Mark in-progress"
-                    @click="quickStatusToggle(task)"
-                  >
-                    <ClockIcon class="h-4 w-4" />
-                  </button>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-800 line-clamp-2">{{ task.title }}</p>
-                    <div class="flex items-center gap-2 mt-1">
-                      <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
-                      <span v-if="task.owner_name" class="text-xs text-gray-400">{{ task.owner_name }}</span>
+          <draggable
+            v-model="draggableTodo"
+            class="space-y-2 min-h-[2rem]"
+            item-key="id"
+            handle=".drag-handle"
+            animation="150"
+            @end="() => onColumnDragEnd(draggableTodo)"
+          >
+            <template #item="{ element: task }">
+              <div class="card group">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <button
+                      class="mt-0.5 text-gray-300 hover:text-blue-500 transition-colors flex-shrink-0"
+                      title="Mark in-progress"
+                      @click="quickStatusToggle(task)"
+                    >
+                      <ClockIcon class="h-4 w-4" />
+                    </button>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-800 line-clamp-2">{{ task.title }}</p>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
+                        <span v-if="task.owner_name" class="text-xs text-gray-400">{{ task.owner_name }}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                    <button class="btn-icon" @click="editTarget = task"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
-                    <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = task"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="editTarget = task"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = task"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </template>
+          </draggable>
         </div>
 
         <!-- In Progress column -->
@@ -180,36 +203,42 @@ const tasksByStatus = computed(() => ({
           <h3 class="text-xs font-semibold uppercase tracking-wider text-blue-500 mb-2">
             In Progress ({{ tasksByStatus.in_progress.length }})
           </h3>
-          <div class="space-y-2">
-            <div
-              v-for="task in tasksByStatus.in_progress"
-              :key="task.id"
-              class="card group border-blue-200"
-            >
-              <div class="card-body py-3">
-                <div class="flex items-start gap-2">
-                  <button
-                    class="mt-0.5 text-blue-400 hover:text-green-500 transition-colors flex-shrink-0"
-                    title="Mark done"
-                    @click="quickStatusToggle(task)"
-                  >
-                    <ClockIcon class="h-4 w-4" />
-                  </button>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-800 line-clamp-2">{{ task.title }}</p>
-                    <div class="flex items-center gap-2 mt-1">
-                      <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
-                      <span v-if="task.owner_name" class="text-xs text-gray-400">{{ task.owner_name }}</span>
+          <draggable
+            v-model="draggableInProgress"
+            class="space-y-2 min-h-[2rem]"
+            item-key="id"
+            handle=".drag-handle"
+            animation="150"
+            @end="() => onColumnDragEnd(draggableInProgress)"
+          >
+            <template #item="{ element: task }">
+              <div class="card group border-blue-200">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <button
+                      class="mt-0.5 text-blue-400 hover:text-green-500 transition-colors flex-shrink-0"
+                      title="Mark done"
+                      @click="quickStatusToggle(task)"
+                    >
+                      <ClockIcon class="h-4 w-4" />
+                    </button>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-800 line-clamp-2">{{ task.title }}</p>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
+                        <span v-if="task.owner_name" class="text-xs text-gray-400">{{ task.owner_name }}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                    <button class="btn-icon" @click="editTarget = task"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
-                    <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = task"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="editTarget = task"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = task"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </template>
+          </draggable>
         </div>
 
         <!-- Done column -->
@@ -217,35 +246,41 @@ const tasksByStatus = computed(() => ({
           <h3 class="text-xs font-semibold uppercase tracking-wider text-green-600 mb-2">
             Done ({{ tasksByStatus.done.length }})
           </h3>
-          <div class="space-y-2">
-            <div
-              v-for="task in tasksByStatus.done"
-              :key="task.id"
-              class="card group opacity-75"
-            >
-              <div class="card-body py-3">
-                <div class="flex items-start gap-2">
-                  <button
-                    class="mt-0.5 text-green-500 hover:text-gray-400 transition-colors flex-shrink-0"
-                    title="Mark to-do"
-                    @click="quickStatusToggle(task)"
-                  >
-                    <CheckCircleIcon class="h-4 w-4" />
-                  </button>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-500 line-through line-clamp-2">{{ task.title }}</p>
-                    <div class="flex items-center gap-2 mt-1">
-                      <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
+          <draggable
+            v-model="draggableDone"
+            class="space-y-2 min-h-[2rem]"
+            item-key="id"
+            handle=".drag-handle"
+            animation="150"
+            @end="() => onColumnDragEnd(draggableDone)"
+          >
+            <template #item="{ element: task }">
+              <div class="card group opacity-75">
+                <div class="card-body py-3">
+                  <div class="flex items-start gap-2">
+                    <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                    <button
+                      class="mt-0.5 text-green-500 hover:text-gray-400 transition-colors flex-shrink-0"
+                      title="Mark to-do"
+                      @click="quickStatusToggle(task)"
+                    >
+                      <CheckCircleIcon class="h-4 w-4" />
+                    </button>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-500 line-through line-clamp-2">{{ task.title }}</p>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                    <button class="btn-icon" @click="editTarget = task"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
-                    <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = task"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="editTarget = task"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
+                      <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = task"><TrashIcon class="h-3.5 w-3.5" /></button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </template>
+          </draggable>
         </div>
       </div>
     </template>

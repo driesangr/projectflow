@@ -25,3 +25,7 @@ export async function updateTopic(id: string, payload: TopicUpdate): Promise<Top
 export async function deleteTopic(id: string): Promise<void> {
   await apiClient.delete(`/topics/${id}`)
 }
+
+export async function reorderTopics(items: { id: string; position: number }[]): Promise<void> {
+  await apiClient.patch('/topics/reorder', items)
+}

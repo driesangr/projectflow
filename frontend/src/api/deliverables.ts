@@ -25,3 +25,7 @@ export async function updateDeliverable(id: string, payload: DeliverableUpdate):
 export async function deleteDeliverable(id: string): Promise<void> {
   await apiClient.delete(`/deliverables/${id}`)
 }
+
+export async function reorderDeliverables(items: { id: string; position: number }[]): Promise<void> {
+  await apiClient.patch('/deliverables/reorder', items)
+}

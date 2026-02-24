@@ -4,7 +4,7 @@ import enum
 import uuid
 from typing import Optional
 
-from sqlalchemy import Enum, Float, ForeignKey, String, Text, UUID
+from sqlalchemy import Enum, Float, ForeignKey, Integer, String, Text, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, SoftDeleteMixin, TimestampMixin
@@ -28,6 +28,8 @@ class Task(Base, TimestampMixin, SoftDeleteMixin):
         index=True,
     )
     effort_hours: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    # Manual drag-and-drop ordering within the parent user story
+    position: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     owner_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     # Foreign key

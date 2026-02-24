@@ -24,6 +24,8 @@ class UserStory(Base, TimestampMixin, SoftDeleteMixin):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     acceptance_criteria: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     story_points: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # Manual drag-and-drop ordering within the parent deliverable
+    position: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     status: Mapped[UserStoryStatus] = mapped_column(
         Enum(UserStoryStatus, name="userstorystatus"),
         default=UserStoryStatus.todo,

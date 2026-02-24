@@ -27,3 +27,7 @@ export async function updateUserStory(id: string, payload: UserStoryUpdate): Pro
 export async function deleteUserStory(id: string): Promise<void> {
   await apiClient.delete(`/user-stories/${id}`)
 }
+
+export async function reorderUserStories(items: { id: string; position: number }[]): Promise<void> {
+  await apiClient.patch('/user-stories/reorder', items)
+}

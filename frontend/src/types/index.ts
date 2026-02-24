@@ -55,6 +55,7 @@ export interface Topic {
   owner_name: string | null
   project_id: string
   maturity_percent: number | null
+  position: number
   created_at: string
   updated_at: string
   deliverables?: Deliverable[]
@@ -69,6 +70,7 @@ export interface Deliverable {
   owner_name: string | null
   topic_id: string
   maturity_percent: number | null
+  position: number
   created_at: string
   updated_at: string
   user_stories?: UserStory[]
@@ -84,6 +86,7 @@ export interface UserStory {
   owner_name: string | null
   deliverable_id: string
   sprint_id: string | null
+  position: number
   created_at: string
   updated_at: string
   tasks?: Task[]
@@ -97,6 +100,7 @@ export interface Task {
   effort_hours: number | null
   owner_name: string | null
   user_story_id: string
+  position: number
   created_at: string
   updated_at: string
 }

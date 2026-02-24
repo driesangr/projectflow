@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -12,6 +12,7 @@ from app.models.audit_log import AuditAction, AuditLog
 from app.models.task import Task
 from app.models.user import User
 from app.routers.auth import get_current_user
+from app.schemas.reorder import ReorderItem
 from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
 from app.services.maturity import recalculate_upwards
 
@@ -27,8 +28,21 @@ async def list_tasks(
     query = select(Task).where(Task.is_deleted.is_(False))
     if user_story_id:
         query = query.where(Task.user_story_id == user_story_id)
-    result = await db.execute(query.order_by(Task.created_at.desc()))
+    result = await db.execute(query.order_by(Task.position.asc(), Task.created_at.asc()))
     return result.scalars().all()
+
+
+@router.patch("/reorder", status_code=status.HTTP_204_NO_CONTENT, summary="Reorder tasks")
+async def reorder_tasks(
+    items: list[ReorderItem],
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> None:
+    for item in items:
+        task = await db.get(Task, item.id)
+        if task and not task.is_deleted:
+            task.position = item.position
+    await db.commit()
 
 
 @router.get("/{task_id}", response_model=TaskResponse, summary="Get task by ID")
@@ -52,7 +66,14 @@ async def create_task(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Task:
+    count_res = await db.execute(
+        select(func.count(Task.id)).where(
+            Task.user_story_id == payload.user_story_id,
+            Task.is_deleted.is_(False),
+        )
+    )
     task = Task(**payload.model_dump())
+    task.position = count_res.scalar() or 0
     db.add(task)
     await db.flush()
 
@@ -100,7 +121,6 @@ async def update_task(
             changes=changes,
         ))
 
-    # Task status change triggers upward maturity recalculation
     if status_changed:
         await recalculate_upwards("task", task.id, db)
 

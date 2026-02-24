@@ -25,3 +25,7 @@ export async function updateTask(id: string, payload: TaskUpdate): Promise<Task>
 export async function deleteTask(id: string): Promise<void> {
   await apiClient.delete(`/tasks/${id}`)
 }
+
+export async function reorderTasks(items: { id: string; position: number }[]): Promise<void> {
+  await apiClient.patch('/tasks/reorder', items)
+}

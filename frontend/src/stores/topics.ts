@@ -53,5 +53,9 @@ export const useTopicsStore = defineStore('topics', () => {
     if (current.value?.id === id) current.value = null
   }
 
-  return { topics, current, loading, error, fetchAll, fetchOne, create, update, remove }
+  async function reorder(items: { id: string; position: number }[]) {
+    await api.reorderTopics(items)
+  }
+
+  return { topics, current, loading, error, fetchAll, fetchOne, create, update, remove, reorder }
 })
