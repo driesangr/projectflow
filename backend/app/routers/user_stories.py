@@ -15,7 +15,7 @@ from app.models.user import User
 from app.models.user_story import UserStory
 from app.routers.auth import get_current_user
 from app.schemas.reorder import ReorderItem
-from app.schemas.user_story import UserStoryCreate, UserStoryResponse, UserStoryUpdate
+from app.schemas.user_story import UserStoryCreate, UserStoryResponse, UserStoryUpdate, StoryValueItem
 from app.services.maturity import recalculate_upwards
 
 router = APIRouter(prefix="/user-stories", tags=["user_stories"])
@@ -57,6 +57,22 @@ async def reorder_user_stories(
         story = await db.get(UserStory, item.id)
         if story and not story.is_deleted:
             story.position = item.position
+    await db.commit()
+
+
+@router.patch("/bulk-values", status_code=status.HTTP_204_NO_CONTENT, summary="Bulk update story values")
+async def bulk_update_story_values(
+    items: list[StoryValueItem],
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> None:
+    for item in items:
+        story = await db.get(UserStory, item.id)
+        if story and not story.is_deleted:
+            if item.business_value is not None:
+                story.business_value = item.business_value
+            if item.sprint_value is not None:
+                story.sprint_value = item.sprint_value
     await db.commit()
 
 

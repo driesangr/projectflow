@@ -82,11 +82,21 @@ const sortedTopics = computed(() => {
 
 // Local list used by draggable (only active when sortKey === 'position')
 const draggableTopics = ref<typeof topicsStore.topics>([])
+// Local list for story BV drag (only active when storySortKey === 'business_value')
+const draggableProjectStories = ref<typeof storiesStore.userStories>([])
 watch(sortedTopics, (val) => { draggableTopics.value = [...val] }, { immediate: true })
+watch(sortedProjectStories, (val) => { draggableProjectStories.value = [...val] }, { immediate: true })
 
 async function onTopicDragEnd() {
   if (sortKey.value !== 'position') return
   await topicsStore.reorder(draggableTopics.value.map((t, idx) => ({ id: t.id, position: idx })))
+}
+
+async function onProjectStoryDragEnd() {
+  const n = draggableProjectStories.value.length
+  await storiesStore.setValues(
+    draggableProjectStories.value.map((s, i) => ({ id: s.id, business_value: (n - i) * 10 })),
+  )
 }
 
 const breadcrumbs = computed(() => [
@@ -260,28 +270,43 @@ async function handleDelete() {
 
       <LoadingSpinner v-if="storiesStore.loading" />
       <EmptyState v-else-if="storiesStore.userStories.length === 0" title="No user stories yet" description="Add user stories in the Deliverable detail view." />
-      <div v-else class="space-y-1">
-        <div v-for="story in sortedProjectStories" :key="story.id" class="card">
-          <div class="card-body py-2">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <RouterLink :to="`/user-stories/${story.id}`" class="font-medium text-gray-900 hover:text-brand-600 truncate">
-                    {{ story.title }}
-                  </RouterLink>
-                  <StatusBadge :status="story.status" />
+      <draggable
+        v-else
+        v-model="draggableProjectStories"
+        class="space-y-1"
+        item-key="id"
+        handle=".drag-handle"
+        animation="150"
+        :disabled="storySortKey !== 'business_value'"
+        @end="onProjectStoryDragEnd"
+      >
+        <template #item="{ element: story }">
+          <div class="card">
+            <div class="card-body py-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <Bars3Icon
+                  v-if="storySortKey === 'business_value'"
+                  class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing"
+                />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <RouterLink :to="`/user-stories/${story.id}`" class="font-medium text-gray-900 hover:text-brand-600 truncate">
+                      {{ story.title }}
+                    </RouterLink>
+                    <StatusBadge :status="story.status" />
+                  </div>
                 </div>
-              </div>
-              <div class="flex items-center gap-3 flex-shrink-0 text-xs text-gray-400">
-                <span v-if="story.business_value != null">BV {{ story.business_value }}</span>
-                <span v-if="story.story_points">{{ story.story_points }} pts</span>
-                <span v-if="story.sprint_id" class="text-brand-600">{{ sprintName(story.sprint_id) }}</span>
-                <span v-if="story.owner_name">{{ story.owner_name }}</span>
+                <div class="flex items-center gap-3 flex-shrink-0 text-xs text-gray-400">
+                  <span v-if="story.business_value != null">BV {{ story.business_value }}</span>
+                  <span v-if="story.story_points">{{ story.story_points }} pts</span>
+                  <span v-if="story.sprint_id" class="text-brand-600">{{ sprintName(story.sprint_id) }}</span>
+                  <span v-if="story.owner_name">{{ story.owner_name }}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </template>
+      </draggable>
     </template>
 
     <!-- Create Modal -->

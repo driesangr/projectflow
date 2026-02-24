@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, computed, ref } from 'vue'
+import { onMounted, computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { useSprintsStore } from '@/stores/sprints'
@@ -9,7 +9,8 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
-import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/vue/24/outline'
+import { ArrowUpIcon, ArrowDownIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import draggable from 'vuedraggable'
 
 const route = useRoute()
 const projectId = route.params.projectId as string
@@ -45,6 +46,8 @@ type SortDir = 'asc' | 'desc'
 const storySortKey = ref<StorySortKey>('sprint_value')
 const storySortDir = ref<SortDir>('desc')
 
+const draggableSprintStories = ref<typeof storiesStore.userStories>([])
+
 const sortedStories = computed(() => {
   return [...storiesStore.userStories].sort((a, b) => {
     let result = 0
@@ -58,6 +61,15 @@ const sortedStories = computed(() => {
     return storySortDir.value === 'asc' ? result : -result
   })
 })
+
+watch(sortedStories, (val) => { draggableSprintStories.value = [...val] }, { immediate: true })
+
+async function onSprintStoryDragEnd() {
+  const n = draggableSprintStories.value.length
+  await storiesStore.setValues(
+    draggableSprintStories.value.map((s, i) => ({ id: s.id, sprint_value: (n - i) * 10 })),
+  )
+}
 
 onMounted(async () => {
   await Promise.all([
@@ -118,31 +130,45 @@ onMounted(async () => {
           </button>
         </div>
 
-      <div class="space-y-2">
-        <div v-for="story in sortedStories" :key="story.id" class="card">
-          <div class="card-body">
-            <div class="flex items-center gap-3">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
-                  <RouterLink
-                    :to="`/user-stories/${story.id}`"
-                    class="font-medium text-gray-900 hover:text-brand-600 truncate"
-                  >
-                    {{ story.title }}
-                  </RouterLink>
-                  <StatusBadge :status="story.status" />
-                  <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
-                  <span v-if="story.sprint_value != null" class="text-xs text-brand-600">SV {{ story.sprint_value }}</span>
+      <draggable
+        v-model="draggableSprintStories"
+        class="space-y-2"
+        item-key="id"
+        handle=".drag-handle"
+        animation="150"
+        :disabled="storySortKey !== 'sprint_value'"
+        @end="onSprintStoryDragEnd"
+      >
+        <template #item="{ element: story }">
+          <div class="card">
+            <div class="card-body">
+              <div class="flex items-center gap-3">
+                <Bars3Icon
+                  v-if="storySortKey === 'sprint_value'"
+                  class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing"
+                />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <RouterLink
+                      :to="`/user-stories/${story.id}`"
+                      class="font-medium text-gray-900 hover:text-brand-600 truncate"
+                    >
+                      {{ story.title }}
+                    </RouterLink>
+                    <StatusBadge :status="story.status" />
+                    <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
+                    <span v-if="story.sprint_value != null" class="text-xs text-brand-600">SV {{ story.sprint_value }}</span>
+                  </div>
+                  <p v-if="story.description" class="text-sm text-gray-500 mt-0.5 line-clamp-1">
+                    {{ story.description }}
+                  </p>
                 </div>
-                <p v-if="story.description" class="text-sm text-gray-500 mt-0.5 line-clamp-1">
-                  {{ story.description }}
-                </p>
+                <span v-if="story.owner_name" class="text-xs text-gray-400 flex-shrink-0">{{ story.owner_name }}</span>
               </div>
-              <span v-if="story.owner_name" class="text-xs text-gray-400 flex-shrink-0">{{ story.owner_name }}</span>
             </div>
           </div>
-        </div>
-      </div>
+        </template>
+      </draggable>
       </template>
     </template>
   </div>

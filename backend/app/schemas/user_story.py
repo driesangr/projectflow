@@ -40,6 +40,12 @@ class UserStoryUpdate(BaseModel):
     sprint_id: Optional[UUID] = None
 
 
+class StoryValueItem(BaseModel):
+    id: UUID
+    business_value: Optional[int] = None
+    sprint_value: Optional[int] = None
+
+
 class UserStoryResponse(UserStoryBase):
     model_config = ConfigDict(from_attributes=True)
 

@@ -57,5 +57,22 @@ export const useUserStoriesStore = defineStore('userStories', () => {
     await api.reorderUserStories(items)
   }
 
-  return { userStories, current, loading, error, fetchAll, fetchOne, create, update, remove, reorder }
+  async function setValues(
+    items: { id: string; business_value?: number | null; sprint_value?: number | null }[],
+  ) {
+    await api.setBulkStoryValues(items)
+    for (const item of items) {
+      const story = userStories.value.find((s) => s.id === item.id)
+      if (story) {
+        if (item.business_value !== undefined) story.business_value = item.business_value ?? null
+        if (item.sprint_value !== undefined) story.sprint_value = item.sprint_value ?? null
+      }
+      if (current.value?.id === item.id) {
+        if (item.business_value !== undefined) current.value.business_value = item.business_value ?? null
+        if (item.sprint_value !== undefined) current.value.sprint_value = item.sprint_value ?? null
+      }
+    }
+  }
+
+  return { userStories, current, loading, error, fetchAll, fetchOne, create, update, remove, reorder, setValues }
 })

@@ -32,3 +32,9 @@ export async function deleteUserStory(id: string): Promise<void> {
 export async function reorderUserStories(items: { id: string; position: number }[]): Promise<void> {
   await apiClient.patch('/user-stories/reorder', items)
 }
+
+export async function setBulkStoryValues(
+  items: { id: string; business_value?: number | null; sprint_value?: number | null }[],
+): Promise<void> {
+  await apiClient.patch('/user-stories/bulk-values', items)
+}
