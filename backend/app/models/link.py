@@ -1,4 +1,4 @@
-"""Link model – can be attached to a UserStory or a Task."""
+"""Link model – can be attached to a UserStory, Bug, or a Task."""
 
 import uuid
 from typing import Optional
@@ -17,10 +17,16 @@ class Link(Base, TimestampMixin):
     url: Mapped[str] = mapped_column(String(2048), nullable=False)
     label: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
-    # Exactly one of the two FKs should be set
+    # Exactly one of the three FKs should be set
     user_story_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("user_stories.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    bug_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("bugs.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )
@@ -35,6 +41,11 @@ class Link(Base, TimestampMixin):
     user_story: Mapped[Optional["UserStory"]] = relationship(  # noqa: F821
         "UserStory",
         primaryjoin="Link.user_story_id == UserStory.id",
+        back_populates="links",
+    )
+    bug: Mapped[Optional["Bug"]] = relationship(  # noqa: F821
+        "Bug",
+        primaryjoin="Link.bug_id == Bug.id",
         back_populates="links",
     )
     task: Mapped[Optional["Task"]] = relationship(  # noqa: F821

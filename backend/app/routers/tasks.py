@@ -22,12 +22,15 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 @router.get("/", response_model=list[TaskResponse], summary="List tasks")
 async def list_tasks(
     user_story_id: UUID | None = Query(default=None),
+    bug_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ) -> list[Task]:
     query = select(Task).where(Task.is_deleted.is_(False))
     if user_story_id:
         query = query.where(Task.user_story_id == user_story_id)
+    if bug_id:
+        query = query.where(Task.bug_id == bug_id)
     result = await db.execute(query.order_by(Task.position.asc(), Task.created_at.asc()))
     return result.scalars().all()
 
@@ -66,12 +69,22 @@ async def create_task(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Task:
-    count_res = await db.execute(
-        select(func.count(Task.id)).where(
-            Task.user_story_id == payload.user_story_id,
-            Task.is_deleted.is_(False),
+    # Determine parent for position counting
+    if payload.user_story_id:
+        count_res = await db.execute(
+            select(func.count(Task.id)).where(
+                Task.user_story_id == payload.user_story_id,
+                Task.is_deleted.is_(False),
+            )
         )
-    )
+    else:
+        count_res = await db.execute(
+            select(func.count(Task.id)).where(
+                Task.bug_id == payload.bug_id,
+                Task.is_deleted.is_(False),
+            )
+        )
+
     task = Task(**payload.model_dump())
     task.position = count_res.scalar() or 0
     db.add(task)

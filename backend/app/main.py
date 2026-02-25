@@ -33,6 +33,7 @@ from app.routers.sprints import router as sprints_router
 from app.routers.topics import router as topics_router
 from app.routers.deliverables import router as deliverables_router
 from app.routers.user_stories import router as user_stories_router
+from app.routers.bugs import router as bugs_router
 from app.routers.tasks import router as tasks_router
 
 
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
     application.include_router(topics_router)
     application.include_router(deliverables_router)
     application.include_router(user_stories_router)
+    application.include_router(bugs_router)
     application.include_router(tasks_router)
 
     return application

@@ -16,6 +16,8 @@ export type DeliverableStatus = 'todo' | 'in_progress' | 'done' | 'on_hold'
 
 export type UserStoryStatus = 'todo' | 'in_progress' | 'done' | 'on_hold'
 
+export type BugStatus = 'todo' | 'in_progress' | 'done' | 'on_hold'
+
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
 
 // ── Models ───────────────────────────────────────────────────────────────────
@@ -104,6 +106,24 @@ export interface UserStory {
   tasks?: Task[]
 }
 
+export interface Bug {
+  id: string
+  title: string
+  description: string | null
+  acceptance_criteria: string | null
+  story_points: number | null
+  business_value: number | null
+  sprint_value: number | null
+  status: BugStatus
+  owner_name: string | null
+  deliverable_id: string
+  sprint_id: string | null
+  position: number
+  created_at: string
+  updated_at: string
+  tasks?: Task[]
+}
+
 export interface Task {
   id: string
   title: string
@@ -112,7 +132,8 @@ export interface Task {
   effort_hours: number | null
   sprint_value: number | null
   owner_name: string | null
-  user_story_id: string
+  user_story_id: string | null
+  bug_id: string | null
   position: number
   created_at: string
   updated_at: string
@@ -199,6 +220,21 @@ export interface UserStoryCreate {
 
 export type UserStoryUpdate = Partial<Omit<UserStoryCreate, 'deliverable_id'>>
 
+export interface BugCreate {
+  title: string
+  description?: string | null
+  acceptance_criteria?: string | null
+  story_points?: number | null
+  business_value?: number | null
+  sprint_value?: number | null
+  status?: BugStatus
+  owner_name?: string | null
+  deliverable_id: string
+  sprint_id?: string | null
+}
+
+export type BugUpdate = Partial<Omit<BugCreate, 'deliverable_id'>>
+
 export interface TaskCreate {
   title: string
   description?: string | null
@@ -206,10 +242,11 @@ export interface TaskCreate {
   effort_hours?: number | null
   sprint_value?: number | null
   owner_name?: string | null
-  user_story_id: string
+  user_story_id?: string | null
+  bug_id?: string | null
 }
 
-export type TaskUpdate = Partial<Omit<TaskCreate, 'user_story_id'>>
+export type TaskUpdate = Partial<Omit<TaskCreate, 'user_story_id' | 'bug_id'>>
 
 export interface SprintCreate {
   name: string

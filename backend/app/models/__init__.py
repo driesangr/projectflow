@@ -8,6 +8,7 @@ from app.models.sprint import Sprint  # noqa: F401
 from app.models.topic import Topic, TopicPriority  # noqa: F401
 from app.models.deliverable import Deliverable, DeliverableStatus  # noqa: F401
 from app.models.user_story import UserStory, UserStoryStatus  # noqa: F401
+from app.models.bug import Bug, BugStatus  # noqa: F401
 from app.models.task import Task, TaskStatus  # noqa: F401
 from app.models.comment import Comment  # noqa: F401
 from app.models.link import Link  # noqa: F401
@@ -29,6 +30,8 @@ __all__ = [
     "DeliverableStatus",
     "UserStory",
     "UserStoryStatus",
+    "Bug",
+    "BugStatus",
     "Task",
     "TaskStatus",
     "Comment",

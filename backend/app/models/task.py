@@ -1,4 +1,4 @@
-"""Task model – belongs to a UserStory."""
+"""Task model – belongs to a UserStory or Bug."""
 
 import enum
 import uuid
@@ -29,21 +29,30 @@ class Task(Base, TimestampMixin, SoftDeleteMixin):
     )
     effort_hours: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     sprint_value: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    # Manual drag-and-drop ordering within the parent user story
+    # Manual drag-and-drop ordering within the parent user story or bug
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     owner_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
-    # Foreign key
-    user_story_id: Mapped[uuid.UUID] = mapped_column(
+    # Foreign keys – exactly one of user_story_id or bug_id should be set
+    user_story_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("user_stories.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
+        index=True,
+    )
+    bug_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("bugs.id", ondelete="SET NULL"),
+        nullable=True,
         index=True,
     )
 
     # Relations
-    user_story: Mapped["UserStory"] = relationship(  # noqa: F821
+    user_story: Mapped[Optional["UserStory"]] = relationship(  # noqa: F821
         "UserStory", back_populates="tasks"
+    )
+    bug: Mapped[Optional["Bug"]] = relationship(  # noqa: F821
+        "Bug", back_populates="tasks"
     )
     comments: Mapped[list["Comment"]] = relationship(  # noqa: F821
         "Comment",

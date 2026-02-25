@@ -16,7 +16,8 @@ class TaskBase(BaseModel):
     effort_hours: Optional[float] = None
     sprint_value: Optional[int] = None
     owner_name: Optional[str] = None
-    user_story_id: UUID
+    user_story_id: Optional[UUID] = None
+    bug_id: Optional[UUID] = None
 
 
 class TaskCreate(TaskBase):

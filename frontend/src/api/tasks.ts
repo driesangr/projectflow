@@ -1,8 +1,10 @@
 import apiClient from './client'
 import type { Task, TaskCreate, TaskUpdate } from '@/types'
 
-export async function listTasks(userStoryId?: string): Promise<Task[]> {
-  const params = userStoryId ? { user_story_id: userStoryId } : {}
+export async function listTasks(userStoryId?: string, bugId?: string): Promise<Task[]> {
+  const params: Record<string, string> = {}
+  if (userStoryId) params.user_story_id = userStoryId
+  if (bugId) params.bug_id = bugId
   const { data } = await apiClient.get<Task[]>('/tasks/', { params })
   return data
 }

@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTasksStore } from '@/stores/tasks'
 import { useUserStoriesStore } from '@/stores/userStories'
+import { useBugsStore } from '@/stores/bugs'
 import { useDeliverablesStore } from '@/stores/deliverables'
 import { useTopicsStore } from '@/stores/topics'
 import { useProjectsStore } from '@/stores/projects'
@@ -25,6 +26,7 @@ const taskId = route.params.taskId as string
 
 const tasksStore = useTasksStore()
 const storiesStore = useUserStoriesStore()
+const bugsStore = useBugsStore()
 const deliverablesStore = useDeliverablesStore()
 const topicsStore = useTopicsStore()
 const projectsStore = useProjectsStore()
@@ -35,9 +37,6 @@ const { loading: saving, error: saveError, execute } = useApi()
 const showEdit = ref(false)
 const showDelete = ref(false)
 const deleting = ref(false)
-
-const storyTitle = ref('')
-const storyDeliverableId = ref('')
 
 function parseSprintReferrer(ref: string | undefined) {
   if (!ref) return null
@@ -67,6 +66,7 @@ const sprintBreadcrumbs = computed(() => {
 const breadcrumbs = computed(() => {
   const task = tasksStore.current
   const story = storiesStore.current
+  const bug = bugsStore.current
   const deliverable = deliverablesStore.current
   const topic = topicsStore.current
   const project = projectsStore.current
@@ -78,30 +78,44 @@ const breadcrumbs = computed(() => {
   }
   items.push(project ? { label: project.title, to: `/projects/${project.id}` } : { label: 'Project' })
   items.push(topic ? { label: topic.title, to: `/topics/${topic.id}` } : { label: 'Topic' })
-  items.push(deliverable && story ? { label: deliverable.title, to: `/deliverables/${story.deliverable_id}` } : { label: 'Deliverable' })
-  items.push(story && task ? { label: story.title, to: `/user-stories/${task.user_story_id}` } : { label: 'User Story' })
+  if (task?.bug_id) {
+    items.push(deliverable && bug ? { label: deliverable.title, to: `/deliverables/${bug.deliverable_id}` } : { label: 'Deliverable' })
+    items.push(bug && task ? { label: bug.title, to: `/bugs/${task.bug_id}` } : { label: 'Bug' })
+  } else {
+    items.push(deliverable && story ? { label: deliverable.title, to: `/deliverables/${story.deliverable_id}` } : { label: 'Deliverable' })
+    items.push(story && task ? { label: story.title, to: `/user-stories/${task.user_story_id}` } : { label: 'User Story' })
+  }
   items.push({ label: task?.title ?? '…' })
   return items
 })
 
+async function loadParentChain(deliverableId: string) {
+  await deliverablesStore.fetchOne(deliverableId)
+  if (deliverablesStore.current) {
+    await topicsStore.fetchOne(deliverablesStore.current.topic_id)
+    if (topicsStore.current) {
+      await projectsStore.fetchOne(topicsStore.current.project_id)
+      if (projectsStore.current?.project_group_id) {
+        await projectGroupsStore.fetchOne(projectsStore.current.project_group_id)
+      } else {
+        projectGroupsStore.current = null
+      }
+    }
+  }
+}
+
 onMounted(async () => {
   await tasksStore.fetchOne(taskId)
   if (tasksStore.current) {
-    await storiesStore.fetchOne(tasksStore.current.user_story_id)
-    storyTitle.value = storiesStore.current?.title ?? ''
-    storyDeliverableId.value = storiesStore.current?.deliverable_id ?? ''
-    if (storiesStore.current) {
-      await deliverablesStore.fetchOne(storiesStore.current.deliverable_id)
-      if (deliverablesStore.current) {
-        await topicsStore.fetchOne(deliverablesStore.current.topic_id)
-        if (topicsStore.current) {
-          await projectsStore.fetchOne(topicsStore.current.project_id)
-          if (projectsStore.current?.project_group_id) {
-            await projectGroupsStore.fetchOne(projectsStore.current.project_group_id)
-          } else {
-            projectGroupsStore.current = null
-          }
-        }
+    if (tasksStore.current.bug_id) {
+      await bugsStore.fetchOne(tasksStore.current.bug_id)
+      if (bugsStore.current) {
+        await loadParentChain(bugsStore.current.deliverable_id)
+      }
+    } else if (tasksStore.current.user_story_id) {
+      await storiesStore.fetchOne(tasksStore.current.user_story_id)
+      if (storiesStore.current) {
+        await loadParentChain(storiesStore.current.deliverable_id)
       }
     }
   }
@@ -117,9 +131,14 @@ async function handleEdit(data: TaskCreate) {
 
 async function handleDelete() {
   deleting.value = true
+  const task = tasksStore.current
   try {
     await tasksStore.remove(taskId)
-    router.push(`/user-stories/${tasksStore.current?.user_story_id ?? ''}`)
+    if (task?.bug_id) {
+      router.push(`/bugs/${task.bug_id}`)
+    } else {
+      router.push(`/user-stories/${task?.user_story_id ?? ''}`)
+    }
   } finally {
     deleting.value = false
   }
@@ -177,6 +196,7 @@ async function handleDelete() {
       <TaskForm
         v-if="tasksStore.current"
         :user-story-id="tasksStore.current.user_story_id"
+        :bug-id="tasksStore.current.bug_id"
         :initial="tasksStore.current"
         :loading="saving"
         @submit="handleEdit"

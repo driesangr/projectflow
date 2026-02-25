@@ -32,3 +32,6 @@ class Sprint(Base, TimestampMixin, SoftDeleteMixin):
     user_stories: Mapped[list["UserStory"]] = relationship(  # noqa: F821
         "UserStory", back_populates="sprint", lazy="selectin"
     )
+    bugs: Mapped[list["Bug"]] = relationship(  # noqa: F821
+        "Bug", back_populates="sprint", lazy="selectin"
+    )

@@ -60,6 +60,11 @@ const router = createRouter({
       component: () => import('@/views/UserStoryDetailView.vue'),
     },
     {
+      path: '/bugs/:bugId',
+      name: 'bug-detail',
+      component: () => import('@/views/BugDetailView.vue'),
+    },
+    {
       path: '/tasks/:taskId',
       name: 'task-detail',
       component: () => import('@/views/TaskDetailView.vue'),

@@ -21,11 +21,11 @@ export const useTasksStore = defineStore('tasks', () => {
     }
   }
 
-  async function fetchAll(userStoryId?: string) {
+  async function fetchAll(userStoryId?: string, bugId?: string) {
     loading.value = true
     error.value = null
     try {
-      tasks.value = await api.listTasks(userStoryId)
+      tasks.value = await api.listTasks(userStoryId, bugId)
     } catch (e: any) {
       error.value = e.response?.data?.detail ?? 'Failed to load tasks'
     } finally {
