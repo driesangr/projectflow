@@ -1,6 +1,7 @@
 """Import all models so Alembic autogenerate can detect them."""
 
 from app.models.base import Base, SoftDeleteMixin, TimestampMixin  # noqa: F401
+from app.models.project_group import ProjectGroup  # noqa: F401
 from app.models.user import User  # noqa: F401
 from app.models.project import Project, MaturityLevel, ProjectStatus  # noqa: F401
 from app.models.sprint import Sprint  # noqa: F401
@@ -16,6 +17,7 @@ __all__ = [
     "Base",
     "TimestampMixin",
     "SoftDeleteMixin",
+    "ProjectGroup",
     "User",
     "Project",
     "MaturityLevel",

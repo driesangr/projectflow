@@ -14,13 +14,18 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
-// Redirect to login on 401
+// Redirect to login on 401 – use Vue Router to avoid a hard page reload
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('access_token')
-      window.location.href = '/login'
+      // Dynamic import avoids a circular-dependency with router → stores → api/client
+      import('@/router').then(({ default: router }) => {
+        if (router.currentRoute.value.name !== 'login') {
+          router.push({ name: 'login' })
+        }
+      })
     }
     return Promise.reject(error)
   },

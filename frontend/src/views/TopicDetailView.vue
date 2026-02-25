@@ -2,6 +2,8 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTopicsStore } from '@/stores/topics'
+import { useProjectsStore } from '@/stores/projects'
+import { useProjectGroupsStore } from '@/stores/projectGroups'
 import { useDeliverablesStore } from '@/stores/deliverables'
 import { useApi } from '@/composables/useApi'
 import type { Deliverable, DeliverableCreate, TopicCreate } from '@/types'
@@ -23,6 +25,8 @@ const router = useRouter()
 const topicId = route.params.topicId as string
 
 const topicsStore = useTopicsStore()
+const projectsStore = useProjectsStore()
+const projectGroupsStore = useProjectGroupsStore()
 const deliverablesStore = useDeliverablesStore()
 const { loading: saving, error: saveError, execute } = useApi()
 
@@ -77,16 +81,36 @@ async function quickStatusToggle(d: Deliverable) {
 
 const breadcrumbs = computed(() => {
   const topic = topicsStore.current
-  return [
-    { label: 'Projects', to: '/projects' },
-    topic ? { label: 'Project', to: `/projects/${topic.project_id}` } : { label: 'Project' },
-    { label: topic?.title ?? '…' },
-  ]
+  const project = projectsStore.current
+  const group = projectGroupsStore.current
+  const items: { label: string; to?: string }[] = []
+
+  if (group && project?.project_group_id) {
+    items.push({ label: 'Projektgruppen', to: '/project-groups' })
+    items.push({ label: group.title, to: `/project-groups/${group.id}` })
+  } else {
+    items.push({ label: 'Projects', to: '/projects' })
+  }
+
+  if (topic) {
+    items.push({ label: project?.title ?? 'Project', to: `/projects/${topic.project_id}` })
+  } else {
+    items.push({ label: 'Project' })
+  }
+
+  items.push({ label: topic?.title ?? '…' })
+  return items
 })
 
 onMounted(async () => {
   await topicsStore.fetchOne(topicId)
   businessValue.value = topicsStore.current?.business_value ?? null
+  if (topicsStore.current?.project_id) {
+    await projectsStore.fetchOne(topicsStore.current.project_id)
+    if (projectsStore.current?.project_group_id) {
+      await projectGroupsStore.fetchOne(projectsStore.current.project_group_id)
+    }
+  }
   await deliverablesStore.fetchAll(topicId)
 })
 

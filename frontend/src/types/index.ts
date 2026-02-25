@@ -20,6 +20,14 @@ export type TaskStatus = 'todo' | 'in_progress' | 'done'
 
 // ── Models ───────────────────────────────────────────────────────────────────
 
+export interface ProjectGroup {
+  id: string
+  title: string
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface User {
   id: string
   username: string
@@ -39,6 +47,7 @@ export interface Project {
   status: ProjectStatus
   owner_name: string | null
   tags: string[] | null
+  project_group_id: string | null
   created_at: string
   updated_at: string
   topics?: Topic[]
@@ -129,6 +138,13 @@ export interface TokenResponse {
 
 // ── Payload helpers ───────────────────────────────────────────────────────────
 
+export interface ProjectGroupCreate {
+  title: string
+  description?: string | null
+}
+
+export type ProjectGroupUpdate = Partial<ProjectGroupCreate>
+
 export interface ProjectCreate {
   title: string
   description?: string | null
@@ -138,6 +154,7 @@ export interface ProjectCreate {
   status?: ProjectStatus
   owner_name?: string | null
   tags?: string[] | null
+  project_group_id?: string | null
 }
 
 export type ProjectUpdate = Partial<ProjectCreate>

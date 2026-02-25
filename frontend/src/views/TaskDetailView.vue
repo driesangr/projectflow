@@ -2,6 +2,12 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTasksStore } from '@/stores/tasks'
+import { useUserStoriesStore } from '@/stores/userStories'
+import { useDeliverablesStore } from '@/stores/deliverables'
+import { useTopicsStore } from '@/stores/topics'
+import { useProjectsStore } from '@/stores/projects'
+import { useProjectGroupsStore } from '@/stores/projectGroups'
+import { useSprintsStore } from '@/stores/sprints'
 import { useApi } from '@/composables/useApi'
 import type { TaskCreate } from '@/types'
 import Breadcrumb from '@/components/layout/Breadcrumb.vue'
@@ -18,6 +24,12 @@ const router = useRouter()
 const taskId = route.params.taskId as string
 
 const tasksStore = useTasksStore()
+const storiesStore = useUserStoriesStore()
+const deliverablesStore = useDeliverablesStore()
+const topicsStore = useTopicsStore()
+const projectsStore = useProjectsStore()
+const projectGroupsStore = useProjectGroupsStore()
+const sprintsStore = useSprintsStore()
 const { loading: saving, error: saveError, execute } = useApi()
 
 const showEdit = ref(false)
@@ -27,24 +39,74 @@ const deleting = ref(false)
 const storyTitle = ref('')
 const storyDeliverableId = ref('')
 
-const breadcrumbs = computed(() => [
-  { label: 'Projects', to: '/projects' },
-  storyDeliverableId.value
-    ? { label: 'Deliverable', to: `/deliverables/${storyDeliverableId.value}` }
-    : { label: 'Deliverable' },
-  storyTitle.value
-    ? { label: storyTitle.value, to: `/user-stories/${tasksStore.current?.user_story_id}` }
-    : { label: 'User Story' },
-  { label: tasksStore.current?.title ?? '…' },
-])
+function parseSprintReferrer(ref: string | undefined) {
+  if (!ref) return null
+  const m = ref.match(/^\/projects\/([^/]+)\/sprints\/([^/]+)$/)
+  return m ? { projectId: m[1], sprintId: m[2] } : null
+}
+
+const sprintRef = computed(() => parseSprintReferrer(route.query.referrer as string | undefined))
+
+const sprintBreadcrumbs = computed(() => {
+  if (!sprintRef.value) return []
+  const project = projectsStore.current
+  const group = projectGroupsStore.current
+  const sprint = sprintsStore.current
+  const { projectId: pid, sprintId: sid } = sprintRef.value
+  const items: { label: string; to?: string }[] = []
+  if (project?.project_group_id && group) {
+    items.push({ label: 'Projektgruppen', to: '/project-groups' })
+    items.push({ label: group.title, to: `/project-groups/${group.id}` })
+  }
+  items.push({ label: project?.title ?? '…', to: `/projects/${pid}` })
+  items.push({ label: 'Sprints', to: `/projects/${pid}/sprints` })
+  items.push({ label: sprint?.name ?? '…', to: `/projects/${pid}/sprints/${sid}` })
+  return items
+})
+
+const breadcrumbs = computed(() => {
+  const task = tasksStore.current
+  const story = storiesStore.current
+  const deliverable = deliverablesStore.current
+  const topic = topicsStore.current
+  const project = projectsStore.current
+  const group = projectGroupsStore.current
+  const items: { label: string; to?: string }[] = []
+  if (project?.project_group_id && group) {
+    items.push({ label: 'Projektgruppen', to: '/project-groups' })
+    items.push({ label: group.title, to: `/project-groups/${group.id}` })
+  }
+  items.push(project ? { label: project.title, to: `/projects/${project.id}` } : { label: 'Project' })
+  items.push(topic ? { label: topic.title, to: `/topics/${topic.id}` } : { label: 'Topic' })
+  items.push(deliverable && story ? { label: deliverable.title, to: `/deliverables/${story.deliverable_id}` } : { label: 'Deliverable' })
+  items.push(story && task ? { label: story.title, to: `/user-stories/${task.user_story_id}` } : { label: 'User Story' })
+  items.push({ label: task?.title ?? '…' })
+  return items
+})
 
 onMounted(async () => {
   await tasksStore.fetchOne(taskId)
   if (tasksStore.current) {
-    const { getUserStory } = await import('@/api/userStories')
-    const story = await getUserStory(tasksStore.current.user_story_id)
-    storyTitle.value = story.title
-    storyDeliverableId.value = story.deliverable_id
+    await storiesStore.fetchOne(tasksStore.current.user_story_id)
+    storyTitle.value = storiesStore.current?.title ?? ''
+    storyDeliverableId.value = storiesStore.current?.deliverable_id ?? ''
+    if (storiesStore.current) {
+      await deliverablesStore.fetchOne(storiesStore.current.deliverable_id)
+      if (deliverablesStore.current) {
+        await topicsStore.fetchOne(deliverablesStore.current.topic_id)
+        if (topicsStore.current) {
+          await projectsStore.fetchOne(topicsStore.current.project_id)
+          if (projectsStore.current?.project_group_id) {
+            await projectGroupsStore.fetchOne(projectsStore.current.project_group_id)
+          } else {
+            projectGroupsStore.current = null
+          }
+        }
+      }
+    }
+  }
+  if (sprintRef.value) {
+    await sprintsStore.fetchOne(sprintRef.value.sprintId)
   }
 })
 
@@ -67,6 +129,7 @@ async function handleDelete() {
 <template>
   <div>
     <Breadcrumb :items="breadcrumbs" />
+    <Breadcrumb v-if="sprintBreadcrumbs.length" :items="sprintBreadcrumbs" />
 
     <LoadingSpinner v-if="tasksStore.loading" />
 

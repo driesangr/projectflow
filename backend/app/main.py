@@ -18,6 +18,7 @@ import app.models  # noqa: F401 – ensure all model classes are registered
 
 from app.routers import (  # noqa: F401
     auth,
+    project_groups,
     projects,
     sprints,
     topics,
@@ -26,6 +27,7 @@ from app.routers import (  # noqa: F401
     tasks,
 )
 from app.routers.auth import router as auth_router
+from app.routers.project_groups import router as project_groups_router
 from app.routers.projects import router as projects_router
 from app.routers.sprints import router as sprints_router
 from app.routers.topics import router as topics_router
@@ -66,6 +68,7 @@ def create_app() -> FastAPI:
     # Routers
     # ---------------------------------------------------------------------------
     application.include_router(auth_router)
+    application.include_router(project_groups_router)
     application.include_router(projects_router)
     application.include_router(sprints_router)
     application.include_router(topics_router)

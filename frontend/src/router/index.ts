@@ -12,7 +12,17 @@ const router = createRouter({
     },
     {
       path: '/',
-      redirect: '/projects',
+      redirect: '/project-groups',
+    },
+    {
+      path: '/project-groups',
+      name: 'project-groups',
+      component: () => import('@/views/ProjectGroupListView.vue'),
+    },
+    {
+      path: '/project-groups/:groupId',
+      name: 'project-group-detail',
+      component: () => import('@/views/ProjectGroupDetailView.vue'),
     },
     {
       path: '/projects',
@@ -69,6 +79,10 @@ router.beforeEach(async (to) => {
   // Hydrate user on first navigation
   if (!auth.user) {
     await auth.fetchMe()
+    // fetchMe() calls logout() internally on failure, clearing the token
+    if (!auth.isAuthenticated) {
+      return { name: 'login' }
+    }
   }
 
   return true

@@ -3,6 +3,9 @@ import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDeliverablesStore } from '@/stores/deliverables'
 import { useUserStoriesStore } from '@/stores/userStories'
+import { useTopicsStore } from '@/stores/topics'
+import { useProjectsStore } from '@/stores/projects'
+import { useProjectGroupsStore } from '@/stores/projectGroups'
 import { useApi } from '@/composables/useApi'
 import type { UserStory, UserStoryCreate, DeliverableCreate } from '@/types'
 import Breadcrumb from '@/components/layout/Breadcrumb.vue'
@@ -25,6 +28,9 @@ const deliverableId = route.params.deliverableId as string
 
 const deliverablesStore = useDeliverablesStore()
 const storiesStore = useUserStoriesStore()
+const topicsStore = useTopicsStore()
+const projectsStore = useProjectsStore()
+const projectGroupsStore = useProjectGroupsStore()
 const { loading: saving, error: saveError, execute } = useApi()
 
 const showCreate = ref(false)
@@ -93,11 +99,18 @@ async function quickStatusToggle(s: UserStory) {
 
 const breadcrumbs = computed(() => {
   const d = deliverablesStore.current
-  return [
-    { label: 'Projects', to: '/projects' },
-    d ? { label: 'Topic', to: `/topics/${d.topic_id}` } : { label: 'Topic' },
-    { label: d?.title ?? '…' },
-  ]
+  const topic = topicsStore.current
+  const project = projectsStore.current
+  const group = projectGroupsStore.current
+  const items: { label: string; to?: string }[] = []
+  if (project?.project_group_id && group) {
+    items.push({ label: 'Projektgruppen', to: '/project-groups' })
+    items.push({ label: group.title, to: `/project-groups/${group.id}` })
+  }
+  items.push(project ? { label: project.title, to: `/projects/${project.id}` } : { label: 'Project' })
+  items.push(topic && d ? { label: topic.title, to: `/topics/${d.topic_id}` } : { label: 'Topic' })
+  items.push({ label: d?.title ?? '…' })
+  return items
 })
 
 const projectId = ref<string>('')
@@ -107,9 +120,16 @@ onMounted(async () => {
   await storiesStore.fetchAll(deliverableId)
 
   if (deliverablesStore.current) {
-    const { getTopic } = await import('@/api/topics')
-    const topic = await getTopic(deliverablesStore.current.topic_id)
-    projectId.value = topic.project_id
+    await topicsStore.fetchOne(deliverablesStore.current.topic_id)
+    if (topicsStore.current) {
+      projectId.value = topicsStore.current.project_id
+      await projectsStore.fetchOne(topicsStore.current.project_id)
+      if (projectsStore.current?.project_group_id) {
+        await projectGroupsStore.fetchOne(projectsStore.current.project_group_id)
+      } else {
+        projectGroupsStore.current = null
+      }
+    }
   }
 })
 

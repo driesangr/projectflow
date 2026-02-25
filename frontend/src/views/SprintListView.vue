@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
+import { useProjectGroupsStore } from '@/stores/projectGroups'
 import { useSprintsStore } from '@/stores/sprints'
 import { useApi } from '@/composables/useApi'
 import type { Sprint, SprintCreate } from '@/types'
@@ -18,6 +19,7 @@ const route = useRoute()
 const projectId = route.params.projectId as string
 
 const projectsStore = useProjectsStore()
+const projectGroupsStore = useProjectGroupsStore()
 const sprintsStore = useSprintsStore()
 const { loading: saving, error: saveError, execute } = useApi()
 
@@ -26,14 +28,26 @@ const editTarget = ref<Sprint | null>(null)
 const deleteTarget = ref<Sprint | null>(null)
 const deleting = ref(false)
 
-const breadcrumbs = computed(() => [
-  { label: 'Projects', to: '/projects' },
-  { label: projectsStore.current?.title ?? '…', to: `/projects/${projectId}` },
-  { label: 'Sprints' },
-])
+const breadcrumbs = computed(() => {
+  const project = projectsStore.current
+  const group = projectGroupsStore.current
+  const items: { label: string; to?: string }[] = []
+  if (project?.project_group_id && group) {
+    items.push({ label: 'Projektgruppen', to: '/project-groups' })
+    items.push({ label: group.title, to: `/project-groups/${group.id}` })
+  }
+  items.push({ label: project?.title ?? '…', to: `/projects/${projectId}` })
+  items.push({ label: 'Sprints' })
+  return items
+})
 
 onMounted(async () => {
   await projectsStore.fetchOne(projectId)
+  if (projectsStore.current?.project_group_id) {
+    await projectGroupsStore.fetchOne(projectsStore.current.project_group_id)
+  } else {
+    projectGroupsStore.current = null
+  }
   await sprintsStore.fetchAll(projectId)
 })
 

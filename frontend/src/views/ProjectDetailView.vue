@@ -2,10 +2,11 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
+import { useProjectGroupsStore } from '@/stores/projectGroups'
 import { useTopicsStore } from '@/stores/topics'
 import { useUserStoriesStore } from '@/stores/userStories'
 import { useApi } from '@/composables/useApi'
-import type { Topic, TopicCreate, UserStory } from '@/types'
+import type { Topic, TopicCreate, UserStory, ProjectCreate } from '@/types'
 import Breadcrumb from '@/components/layout/Breadcrumb.vue'
 import Modal from '@/components/common/Modal.vue'
 import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
@@ -15,6 +16,7 @@ import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
+import ProjectForm from '@/components/forms/ProjectForm.vue'
 import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon } from '@heroicons/vue/24/outline'
 import { useSprintsStore } from '@/stores/sprints'
 import draggable from 'vuedraggable'
@@ -23,12 +25,14 @@ const route = useRoute()
 const projectId = route.params.projectId as string
 
 const projectsStore = useProjectsStore()
+const projectGroupsStore = useProjectGroupsStore()
 const topicsStore = useTopicsStore()
 const storiesStore = useUserStoriesStore()
 const sprintsStore = useSprintsStore()
 const { loading: saving, error: saveError, execute } = useApi()
 
 const showCreate = ref(false)
+const showEditProject = ref(false)
 const editTarget = ref<Topic | null>(null)
 const deleteTarget = ref<Topic | null>(null)
 const deleting = ref(false)
@@ -99,19 +103,41 @@ async function onProjectStoryDragEnd() {
   )
 }
 
-const breadcrumbs = computed(() => [
-  { label: 'Projects', to: '/projects' },
-  { label: projectsStore.current?.title ?? '…' },
-])
+const breadcrumbs = computed(() => {
+  const items: { label: string; to?: string }[] = []
+  if (projectsStore.current?.project_group_id && projectGroupsStore.current) {
+    items.push({ label: 'Projektgruppen', to: '/project-groups' })
+    items.push({ label: projectGroupsStore.current.title, to: `/project-groups/${projectGroupsStore.current.id}` })
+  } else {
+    items.push({ label: 'Projects', to: '/projects' })
+  }
+  items.push({ label: projectsStore.current?.title ?? '…' })
+  return items
+})
 
 onMounted(async () => {
   await projectsStore.fetchOne(projectId)
+  if (projectsStore.current?.project_group_id) {
+    await projectGroupsStore.fetchOne(projectsStore.current.project_group_id)
+  }
   await Promise.all([
     topicsStore.fetchAll(projectId),
     storiesStore.fetchAll(undefined, undefined, projectId),
     sprintsStore.fetchAll(projectId),
   ])
 })
+
+async function handleProjectEdit(data: ProjectCreate) {
+  const result = await execute(() => projectsStore.update(projectId, data))
+  if (result) {
+    showEditProject.value = false
+    if (result.project_group_id) {
+      await projectGroupsStore.fetchOne(result.project_group_id)
+    } else {
+      projectGroupsStore.current = null
+    }
+  }
+}
 
 async function handleCreate(data: TopicCreate) {
   const result = await execute(() => topicsStore.create(data))
@@ -154,13 +180,19 @@ async function handleDelete() {
             </span>
           </div>
         </div>
-        <RouterLink
-          :to="`/projects/${projectId}/sprints`"
-          class="btn-secondary"
-        >
-          <BoltIcon class="h-4 w-4" />
-          Sprints
-        </RouterLink>
+        <div class="flex items-center gap-2">
+          <button class="btn-secondary" @click="showEditProject = true">
+            <PencilSquareIcon class="h-4 w-4" />
+            Bearbeiten
+          </button>
+          <RouterLink
+            :to="`/projects/${projectId}/sprints`"
+            class="btn-secondary"
+          >
+            <BoltIcon class="h-4 w-4" />
+            Sprints
+          </RouterLink>
+        </div>
       </div>
 
       <p v-if="projectsStore.current.description" class="text-sm text-gray-600 mb-6">
@@ -308,6 +340,18 @@ async function handleDelete() {
         </template>
       </draggable>
     </template>
+
+    <!-- Edit Project Modal -->
+    <Modal :open="showEditProject" title="Projekt bearbeiten" @close="showEditProject = false">
+      <ErrorBanner v-if="saveError" :message="saveError" class="mb-3" />
+      <ProjectForm
+        v-if="projectsStore.current"
+        :initial="projectsStore.current"
+        :loading="saving"
+        @submit="handleProjectEdit"
+        @cancel="showEditProject = false"
+      />
+    </Modal>
 
     <!-- Create Modal -->
     <Modal :open="showCreate" title="New Topic" @close="showCreate = false">

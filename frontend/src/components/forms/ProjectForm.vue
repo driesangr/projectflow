@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, onMounted } from 'vue'
 import type { Project, ProjectCreate } from '@/types'
+import { useProjectGroupsStore } from '@/stores/projectGroups'
 
 const props = defineProps<{
   initial?: Partial<Project>
@@ -12,6 +13,8 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
+const groupsStore = useProjectGroupsStore()
+
 const form = reactive<ProjectCreate>({
   title: props.initial?.title ?? '',
   description: props.initial?.description ?? '',
@@ -21,7 +24,10 @@ const form = reactive<ProjectCreate>({
   maturity_level: props.initial?.maturity_level ?? 'idea',
   status: props.initial?.status ?? 'active',
   tags: props.initial?.tags ?? null,
+  project_group_id: props.initial?.project_group_id ?? null,
 })
+
+onMounted(() => groupsStore.fetchAll())
 
 function submit() {
   const payload: ProjectCreate = {
@@ -30,6 +36,7 @@ function submit() {
     owner_name: form.owner_name || null,
     start_date: form.start_date || null,
     planned_end_date: form.planned_end_date || null,
+    project_group_id: form.project_group_id || null,
   }
   emit('submit', payload)
 }
@@ -68,6 +75,14 @@ function submit() {
           <option value="on_hold">On Hold</option>
         </select>
       </div>
+    </div>
+
+    <div>
+      <label class="form-label" for="group">Projektgruppe</label>
+      <select id="group" v-model="form.project_group_id" class="form-select">
+        <option :value="null">Keine Gruppe</option>
+        <option v-for="g in groupsStore.projectGroups" :key="g.id" :value="g.id">{{ g.title }}</option>
+      </select>
     </div>
 
     <div>

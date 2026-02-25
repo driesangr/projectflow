@@ -5,9 +5,18 @@ import type { Sprint, SprintCreate, SprintUpdate } from '@/types'
 
 export const useSprintsStore = defineStore('sprints', () => {
   const sprints = ref<Sprint[]>([])
+  const allSprints = ref<Sprint[]>([])
   const current = ref<Sprint | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  async function fetchAllGlobal() {
+    try {
+      allSprints.value = await api.listSprints()
+    } catch {
+      // silent – Sidebar zeigt einfach nichts
+    }
+  }
 
   async function fetchAll(projectId?: string) {
     loading.value = true
@@ -53,5 +62,5 @@ export const useSprintsStore = defineStore('sprints', () => {
     if (current.value?.id === id) current.value = null
   }
 
-  return { sprints, current, loading, error, fetchAll, fetchOne, create, update, remove }
+  return { sprints, allSprints, current, loading, error, fetchAllGlobal, fetchAll, fetchOne, create, update, remove }
 })

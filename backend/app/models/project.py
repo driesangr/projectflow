@@ -1,9 +1,10 @@
 """Project model."""
 
 import enum
+import uuid
 from typing import Optional
 
-from sqlalchemy import Enum, String, Text, Date
+from sqlalchemy import UUID, Enum, ForeignKey, String, Text, Date
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -48,6 +49,14 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
     owner_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     # Stored as a JSON array of strings
     tags: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+
+    # Parent relation
+    project_group_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("project_groups.id"), nullable=True, index=True
+    )
+    project_group: Mapped[Optional["ProjectGroup"]] = relationship(  # noqa: F821
+        "ProjectGroup", back_populates="projects"
+    )
 
     # Child relations
     topics: Mapped[list["Topic"]] = relationship(  # noqa: F821

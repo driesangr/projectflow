@@ -3,6 +3,11 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStoriesStore } from '@/stores/userStories'
 import { useTasksStore } from '@/stores/tasks'
+import { useDeliverablesStore } from '@/stores/deliverables'
+import { useTopicsStore } from '@/stores/topics'
+import { useProjectsStore } from '@/stores/projects'
+import { useProjectGroupsStore } from '@/stores/projectGroups'
+import { useSprintsStore } from '@/stores/sprints'
 import { useApi } from '@/composables/useApi'
 import type { Task, TaskCreate, UserStory, UserStoryCreate } from '@/types'
 import Breadcrumb from '@/components/layout/Breadcrumb.vue'
@@ -39,6 +44,11 @@ function goBack() {
 
 const storiesStore = useUserStoriesStore()
 const tasksStore = useTasksStore()
+const deliverablesStore = useDeliverablesStore()
+const topicsStore = useTopicsStore()
+const projectsStore = useProjectsStore()
+const projectGroupsStore = useProjectGroupsStore()
+const sprintsStore = useSprintsStore()
 const { loading: saving, error: saveError, execute } = useApi()
 
 const showCreate = ref(false)
@@ -50,13 +60,52 @@ const deleting = ref(false)
 
 const projectId = ref<string>('')
 
+function parseSprintReferrer(ref: string | undefined) {
+  if (!ref) return null
+  const m = ref.match(/^\/projects\/([^/]+)\/sprints\/([^/]+)$/)
+  return m ? { projectId: m[1], sprintId: m[2] } : null
+}
+
+const sprintRef = computed(() => parseSprintReferrer(route.query.referrer as string | undefined))
+
+const sprintBreadcrumbs = computed(() => {
+  if (!sprintRef.value) return []
+  const project = projectsStore.current
+  const group = projectGroupsStore.current
+  const sprint = sprintsStore.current
+  const { projectId: pid, sprintId: sid } = sprintRef.value
+  const items: { label: string; to?: string }[] = []
+  if (project?.project_group_id && group) {
+    items.push({ label: 'Projektgruppen', to: '/project-groups' })
+    items.push({ label: group.title, to: `/project-groups/${group.id}` })
+  }
+  items.push({ label: project?.title ?? '…', to: `/projects/${pid}` })
+  items.push({ label: 'Sprints', to: `/projects/${pid}/sprints` })
+  items.push({ label: sprint?.name ?? '…', to: `/projects/${pid}/sprints/${sid}` })
+  return items
+})
+
+function taskLink(taskId: string) {
+  const ref = route.query.referrer as string | undefined
+  return ref ? `/tasks/${taskId}?referrer=${encodeURIComponent(ref)}` : `/tasks/${taskId}`
+}
+
 const breadcrumbs = computed(() => {
   const story = storiesStore.current
-  return [
-    { label: 'Projects', to: '/projects' },
-    story ? { label: 'Deliverable', to: `/deliverables/${story.deliverable_id}` } : { label: 'Deliverable' },
-    { label: story?.title ?? '…' },
-  ]
+  const deliverable = deliverablesStore.current
+  const topic = topicsStore.current
+  const project = projectsStore.current
+  const group = projectGroupsStore.current
+  const items: { label: string; to?: string }[] = []
+  if (project?.project_group_id && group) {
+    items.push({ label: 'Projektgruppen', to: '/project-groups' })
+    items.push({ label: group.title, to: `/project-groups/${group.id}` })
+  }
+  items.push(project ? { label: project.title, to: `/projects/${project.id}` } : { label: 'Project' })
+  items.push(topic ? { label: topic.title, to: `/topics/${topic.id}` } : { label: 'Topic' })
+  items.push(deliverable && story ? { label: deliverable.title, to: `/deliverables/${story.deliverable_id}` } : { label: 'Deliverable' })
+  items.push({ label: story?.title ?? '…' })
+  return items
 })
 
 onMounted(async () => {
@@ -64,11 +113,22 @@ onMounted(async () => {
   await tasksStore.fetchAll(storyId)
 
   if (storiesStore.current) {
-    const { getDeliverable } = await import('@/api/deliverables')
-    const deliverable = await getDeliverable(storiesStore.current.deliverable_id)
-    const { getTopic } = await import('@/api/topics')
-    const topic = await getTopic(deliverable.topic_id)
-    projectId.value = topic.project_id
+    await deliverablesStore.fetchOne(storiesStore.current.deliverable_id)
+    if (deliverablesStore.current) {
+      await topicsStore.fetchOne(deliverablesStore.current.topic_id)
+      if (topicsStore.current) {
+        projectId.value = topicsStore.current.project_id
+        await projectsStore.fetchOne(topicsStore.current.project_id)
+        if (projectsStore.current?.project_group_id) {
+          await projectGroupsStore.fetchOne(projectsStore.current.project_group_id)
+        } else {
+          projectGroupsStore.current = null
+        }
+      }
+    }
+  }
+  if (sprintRef.value) {
+    await sprintsStore.fetchOne(sprintRef.value.sprintId)
   }
 })
 
@@ -150,6 +210,7 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
 <template>
   <div>
     <Breadcrumb :items="breadcrumbs" />
+    <Breadcrumb v-if="sprintBreadcrumbs.length" :items="sprintBreadcrumbs" />
 
     <LoadingSpinner v-if="storiesStore.loading" />
 
@@ -247,7 +308,7 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/tasks/${task.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
+                      <RouterLink :to="taskLink(task.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
                         <span v-if="task.owner_name" class="text-xs text-gray-400">{{ task.owner_name }}</span>
@@ -291,7 +352,7 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/tasks/${task.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
+                      <RouterLink :to="taskLink(task.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
                         <span v-if="task.owner_name" class="text-xs text-gray-400">{{ task.owner_name }}</span>
@@ -335,7 +396,7 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
                       <CheckCircleIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/tasks/${task.id}`" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
+                      <RouterLink :to="taskLink(task.id)" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
                       </div>

@@ -20,6 +20,7 @@ class ProjectBase(BaseModel):
     status: ProjectStatus = ProjectStatus.active
     owner_name: Optional[str] = None
     tags: Optional[list[str]] = None
+    project_group_id: Optional[UUID] = None
 
 
 class ProjectCreate(ProjectBase):
@@ -35,6 +36,7 @@ class ProjectUpdate(BaseModel):
     status: Optional[ProjectStatus] = None
     owner_name: Optional[str] = None
     tags: Optional[list[str]] = None
+    project_group_id: Optional[UUID] = None
 
 
 class ProjectResponse(ProjectBase):
@@ -43,6 +45,7 @@ class ProjectResponse(ProjectBase):
     id: UUID
     created_at: datetime
     updated_at: datetime
+    project_group_id: Optional[UUID] = None
     # Optional nested children for tree view
     topics: Optional[list["TopicResponse"]] = None  # noqa: F821
 
