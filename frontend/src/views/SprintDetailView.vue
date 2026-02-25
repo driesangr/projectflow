@@ -157,7 +157,7 @@ onMounted(async () => {
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2">
                     <RouterLink
-                      :to="`/user-stories/${story.id}`"
+                      :to="`/user-stories/${story.id}?referrer=/projects/${projectId}/sprints/${sprintId}`"
                       class="font-medium text-gray-900 hover:text-brand-600 truncate"
                     >
                       {{ story.title }}

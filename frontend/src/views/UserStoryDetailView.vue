@@ -31,6 +31,12 @@ const route = useRoute()
 const router = useRouter()
 const storyId = route.params.storyId as string
 
+function goBack() {
+  const referrer = route.query.referrer as string | undefined
+  if (referrer) router.push(referrer)
+  else router.back()
+}
+
 const storiesStore = useUserStoriesStore()
 const tasksStore = useTasksStore()
 const { loading: saving, error: saveError, execute } = useApi()
@@ -168,7 +174,7 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button class="btn-secondary btn-sm" @click="router.back()">
+          <button class="btn-secondary btn-sm" @click="goBack()">
             <ArrowLeftIcon class="h-4 w-4" />
             Zurück
           </button>
