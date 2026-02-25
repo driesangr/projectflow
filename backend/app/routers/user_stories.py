@@ -123,7 +123,7 @@ async def duplicate_user_story(
         story_points=source.story_points,
         business_value=source.business_value,
         sprint_value=source.sprint_value,
-        status=source.status,
+        status="todo",
         owner_name=source.owner_name,
         deliverable_id=source.deliverable_id,
         sprint_id=source.sprint_id,
