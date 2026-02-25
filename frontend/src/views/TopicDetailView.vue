@@ -60,6 +60,7 @@ async function onDeliverableChange(status: Deliverable['status'], column: Delive
     try {
       await deliverablesStore.update(evt.added.element.id, { status })
       await deliverablesStore.reorder(column.map((d, i) => ({ id: d.id, position: i })))
+      await topicsStore.fetchOne(topicId)
     } finally {
       isDragging.value = false
     }
@@ -71,6 +72,7 @@ async function onDeliverableChange(status: Deliverable['status'], column: Delive
 async function quickStatusToggle(d: Deliverable) {
   const next = d.status === 'todo' ? 'in_progress' : d.status === 'in_progress' ? 'done' : 'todo'
   await deliverablesStore.update(d.id, { status: next })
+  await topicsStore.fetchOne(topicId)
 }
 
 const breadcrumbs = computed(() => {
