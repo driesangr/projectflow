@@ -23,6 +23,7 @@ import {
   ClockIcon,
   Bars3Icon,
   DocumentDuplicateIcon,
+  ArrowLeftIcon,
 } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
@@ -167,6 +168,10 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
           </div>
         </div>
         <div class="flex items-center gap-2">
+          <button class="btn-secondary btn-sm" @click="router.back()">
+            <ArrowLeftIcon class="h-4 w-4" />
+            Zurück
+          </button>
           <button class="btn-secondary btn-sm" @click="showDuplicate = true">
             <DocumentDuplicateIcon class="h-4 w-4" />
             Duplicate

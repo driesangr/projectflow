@@ -11,7 +11,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import TaskForm from '@/components/forms/TaskForm.vue'
-import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { PencilSquareIcon, TrashIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const router = useRouter()
@@ -88,6 +88,10 @@ async function handleDelete() {
           </div>
         </div>
         <div class="flex items-center gap-2">
+          <button class="btn-secondary btn-sm" @click="router.back()">
+            <ArrowLeftIcon class="h-4 w-4" />
+            Zurück
+          </button>
           <button class="btn-secondary btn-sm" @click="showEdit = true">
             <PencilSquareIcon class="h-4 w-4" />
             Edit Task

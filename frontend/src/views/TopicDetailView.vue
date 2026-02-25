@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useTopicsStore } from '@/stores/topics'
 import { useDeliverablesStore } from '@/stores/deliverables'
 import { useApi } from '@/composables/useApi'
@@ -15,10 +15,11 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
+const router = useRouter()
 const topicId = route.params.topicId as string
 
 const topicsStore = useTopicsStore()
@@ -141,10 +142,16 @@ async function handleDuplicate(id: string) {
             <MaturityBar :percent="topicsStore.current.maturity_percent" />
           </div>
         </div>
-        <button class="btn-secondary btn-sm" @click="showEditTopic = true">
-          <PencilSquareIcon class="h-4 w-4" />
-          Edit Topic
-        </button>
+        <div class="flex items-center gap-2">
+          <button class="btn-secondary btn-sm" @click="router.back()">
+            <ArrowLeftIcon class="h-4 w-4" />
+            Zurück
+          </button>
+          <button class="btn-secondary btn-sm" @click="showEditTopic = true">
+            <PencilSquareIcon class="h-4 w-4" />
+            Edit Topic
+          </button>
+        </div>
       </div>
 
       <p v-if="topicsStore.current.description" class="text-sm text-gray-600 mb-4">

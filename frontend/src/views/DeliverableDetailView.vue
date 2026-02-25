@@ -16,7 +16,7 @@ import MaturityBar from '@/components/common/MaturityBar.vue'
 import UserStoryForm from '@/components/forms/UserStoryForm.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
 import DuplicateUserStoryModal from '@/components/common/DuplicateUserStoryModal.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
@@ -175,6 +175,10 @@ async function handleDelete() {
           </div>
         </div>
         <div class="flex items-center gap-2">
+          <button class="btn-secondary btn-sm" @click="router.back()">
+            <ArrowLeftIcon class="h-4 w-4" />
+            Zurück
+          </button>
           <button class="btn-secondary btn-sm" @click="handleDuplicate">
             <DocumentDuplicateIcon class="h-4 w-4" />
             Duplicate

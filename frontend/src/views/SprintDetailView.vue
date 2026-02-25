@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { useSprintsStore } from '@/stores/sprints'
 import { useUserStoriesStore } from '@/stores/userStories'
@@ -9,10 +9,11 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
-import { ArrowUpIcon, ArrowDownIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import { ArrowUpIcon, ArrowDownIcon, ArrowLeftIcon, Bars3Icon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
+const router = useRouter()
 const projectId = route.params.projectId as string
 const sprintId = route.params.sprintId as string
 
@@ -97,10 +98,16 @@ onMounted(async () => {
             {{ sprintsStore.current.goal }}
           </p>
         </div>
-        <!-- Points summary -->
-        <div v-if="totalPoints > 0" class="text-right">
-          <p class="text-2xl font-bold text-gray-900">{{ donePoints }}/{{ totalPoints }}</p>
-          <p class="text-xs text-gray-500">story points done</p>
+        <div class="flex items-center gap-4">
+          <!-- Points summary -->
+          <div v-if="totalPoints > 0" class="text-right">
+            <p class="text-2xl font-bold text-gray-900">{{ donePoints }}/{{ totalPoints }}</p>
+            <p class="text-xs text-gray-500">story points done</p>
+          </div>
+          <button class="btn-secondary btn-sm" @click="router.back()">
+            <ArrowLeftIcon class="h-4 w-4" />
+            Zurück
+          </button>
         </div>
       </div>
 
