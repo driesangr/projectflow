@@ -1,13 +1,33 @@
 <script setup lang="ts">
+import { watch, onBeforeUnmount } from 'vue'
 import Modal from './Modal.vue'
 
-defineProps<{
+const props = defineProps<{
   open: boolean
   itemName: string
   loading?: boolean
 }>()
 
 const emit = defineEmits<{ close: []; confirm: [] }>()
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter' && !props.loading) {
+    e.preventDefault()
+    emit('confirm')
+  }
+}
+
+watch(() => props.open, (open) => {
+  if (open) {
+    document.addEventListener('keydown', onKeydown)
+  } else {
+    document.removeEventListener('keydown', onKeydown)
+  }
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
