@@ -1,5 +1,6 @@
 """CRUD router for UserStories."""
 
+import re
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -102,9 +103,10 @@ async def duplicate_user_story(
         )
     )
     existing_titles = {row[0] for row in titles_res.fetchall()}
+    base_title = re.sub(r'_Kopie_\d+$', '', source.title)
     counter = 1
     while True:
-        candidate = f"{source.title} Kopie_{counter}"
+        candidate = f"{base_title}_Kopie_{counter}"
         if candidate not in existing_titles:
             break
         counter += 1
