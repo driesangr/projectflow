@@ -5,8 +5,21 @@ import type { Task, TaskCreate, TaskUpdate } from '@/types'
 
 export const useTasksStore = defineStore('tasks', () => {
   const tasks = ref<Task[]>([])
+  const current = ref<Task | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  async function fetchOne(id: string) {
+    loading.value = true
+    error.value = null
+    try {
+      current.value = await api.getTask(id)
+    } catch (e: any) {
+      error.value = e.response?.data?.detail ?? 'Failed to load task'
+    } finally {
+      loading.value = false
+    }
+  }
 
   async function fetchAll(userStoryId?: string) {
     loading.value = true
@@ -30,6 +43,7 @@ export const useTasksStore = defineStore('tasks', () => {
     const task = await api.updateTask(id, payload)
     const idx = tasks.value.findIndex((t) => t.id === id)
     if (idx !== -1) tasks.value[idx] = task
+    if (current.value?.id === id) current.value = task
     return task
   }
 
@@ -42,5 +56,5 @@ export const useTasksStore = defineStore('tasks', () => {
     await api.reorderTasks(items)
   }
 
-  return { tasks, loading, error, fetchAll, create, update, remove, reorder }
+  return { tasks, current, loading, error, fetchOne, fetchAll, create, update, remove, reorder }
 })

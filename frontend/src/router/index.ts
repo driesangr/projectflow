@@ -49,6 +49,11 @@ const router = createRouter({
       name: 'user-story-detail',
       component: () => import('@/views/UserStoryDetailView.vue'),
     },
+    {
+      path: '/tasks/:taskId',
+      name: 'task-detail',
+      component: () => import('@/views/TaskDetailView.vue'),
+    },
   ],
 })
 

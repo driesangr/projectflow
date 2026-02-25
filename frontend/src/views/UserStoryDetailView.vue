@@ -236,7 +236,7 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-800 line-clamp-2">{{ task.title }}</p>
+                      <RouterLink :to="`/tasks/${task.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
                         <span v-if="task.owner_name" class="text-xs text-gray-400">{{ task.owner_name }}</span>
@@ -280,7 +280,7 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-800 line-clamp-2">{{ task.title }}</p>
+                      <RouterLink :to="`/tasks/${task.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
                         <span v-if="task.owner_name" class="text-xs text-gray-400">{{ task.owner_name }}</span>
@@ -324,7 +324,7 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
                       <CheckCircleIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-500 line-through line-clamp-2">{{ task.title }}</p>
+                      <RouterLink :to="`/tasks/${task.id}`" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
                       </div>
