@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStoriesStore } from '@/stores/userStories'
 import { useTasksStore } from '@/stores/tasks'
 import { useApi } from '@/composables/useApi'
-import type { Task, TaskCreate, UserStoryCreate } from '@/types'
+import type { Task, TaskCreate, UserStory, UserStoryCreate } from '@/types'
 import Breadcrumb from '@/components/layout/Breadcrumb.vue'
 import Modal from '@/components/common/Modal.vue'
 import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
@@ -14,6 +14,7 @@ import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import TaskForm from '@/components/forms/TaskForm.vue'
 import UserStoryForm from '@/components/forms/UserStoryForm.vue'
+import DuplicateUserStoryModal from '@/components/common/DuplicateUserStoryModal.vue'
 import {
   PlusIcon,
   PencilSquareIcon,
@@ -21,10 +22,12 @@ import {
   CheckCircleIcon,
   ClockIcon,
   Bars3Icon,
+  DocumentDuplicateIcon,
 } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
+const router = useRouter()
 const storyId = route.params.storyId as string
 
 const storiesStore = useUserStoriesStore()
@@ -33,6 +36,7 @@ const { loading: saving, error: saveError, execute } = useApi()
 
 const showCreate = ref(false)
 const showEditStory = ref(false)
+const showDuplicate = ref(false)
 const editTarget = ref<Task | null>(null)
 const deleteTarget = ref<Task | null>(null)
 const deleting = ref(false)
@@ -60,6 +64,11 @@ onMounted(async () => {
     projectId.value = topic.project_id
   }
 })
+
+function handleStoryDuplicated(story: UserStory) {
+  showDuplicate.value = false
+  router.push(`/user-stories/${story.id}`)
+}
 
 async function handleStoryEdit(data: UserStoryCreate) {
   const result = await execute(() => storiesStore.update(storyId, data))
@@ -157,10 +166,16 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
             </span>
           </div>
         </div>
-        <button class="btn-secondary btn-sm" @click="showEditStory = true">
-          <PencilSquareIcon class="h-4 w-4" />
-          Edit Story
-        </button>
+        <div class="flex items-center gap-2">
+          <button class="btn-secondary btn-sm" @click="showDuplicate = true">
+            <DocumentDuplicateIcon class="h-4 w-4" />
+            Duplicate
+          </button>
+          <button class="btn-secondary btn-sm" @click="showEditStory = true">
+            <PencilSquareIcon class="h-4 w-4" />
+            Edit Story
+          </button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -350,6 +365,15 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
       :loading="deleting"
       @close="deleteTarget = null"
       @confirm="handleDelete"
+    />
+
+    <DuplicateUserStoryModal
+      v-if="storiesStore.current"
+      :open="showDuplicate"
+      :story-id="storyId"
+      :story-title="storiesStore.current.title"
+      @close="showDuplicate = false"
+      @duplicated="handleStoryDuplicated"
     />
 
     <Modal :open="showEditStory" title="Edit User Story" @close="showEditStory = false">

@@ -10,12 +10,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.audit_log import AuditAction, AuditLog
 from app.models.deliverable import Deliverable
+from app.models.task import Task
 from app.models.topic import Topic
 from app.models.user import User
 from app.models.user_story import UserStory
 from app.routers.auth import get_current_user
 from app.schemas.reorder import ReorderItem
-from app.schemas.user_story import UserStoryCreate, UserStoryResponse, UserStoryUpdate, StoryValueItem
+from app.schemas.user_story import (
+    UserStoryCreate, UserStoryResponse, UserStoryUpdate,
+    UserStoryDuplicateRequest, StoryValueItem,
+)
 from app.services.maturity import recalculate_upwards
 
 router = APIRouter(prefix="/user-stories", tags=["user_stories"])
@@ -74,6 +78,95 @@ async def bulk_update_story_values(
             if item.sprint_value is not None:
                 story.sprint_value = item.sprint_value
     await db.commit()
+
+
+@router.post(
+    "/{story_id}/duplicate", response_model=UserStoryResponse,
+    status_code=status.HTTP_201_CREATED, summary="Duplicate a user story"
+)
+async def duplicate_user_story(
+    story_id: UUID,
+    payload: UserStoryDuplicateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserStory:
+    source = await db.get(UserStory, story_id)
+    if not source or source.is_deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User story not found")
+
+    # Find unique title within same deliverable
+    titles_res = await db.execute(
+        select(UserStory.title).where(
+            UserStory.deliverable_id == source.deliverable_id,
+            UserStory.is_deleted.is_(False),
+        )
+    )
+    existing_titles = {row[0] for row in titles_res.fetchall()}
+    counter = 1
+    while True:
+        candidate = f"{source.title} Kopie_{counter}"
+        if candidate not in existing_titles:
+            break
+        counter += 1
+
+    count_res = await db.execute(
+        select(func.count(UserStory.id)).where(
+            UserStory.deliverable_id == source.deliverable_id,
+            UserStory.is_deleted.is_(False),
+        )
+    )
+
+    copy = UserStory(
+        title=candidate,
+        description=source.description,
+        acceptance_criteria=source.acceptance_criteria,
+        story_points=source.story_points,
+        business_value=source.business_value,
+        sprint_value=source.sprint_value,
+        status=source.status,
+        owner_name=source.owner_name,
+        deliverable_id=source.deliverable_id,
+        sprint_id=source.sprint_id,
+        position=count_res.scalar() or 0,
+    )
+    db.add(copy)
+    await db.flush()
+
+    # Copy selected tasks in original order
+    if payload.task_ids:
+        task_id_set = set(payload.task_ids)
+        tasks_res = await db.execute(
+            select(Task)
+            .where(Task.user_story_id == source.id, Task.is_deleted.is_(False))
+            .order_by(Task.position.asc())
+        )
+        source_tasks = tasks_res.scalars().all()
+        pos = 0
+        for t in source_tasks:
+            if t.id in task_id_set:
+                db.add(Task(
+                    title=t.title,
+                    description=t.description,
+                    status=t.status,
+                    effort_hours=t.effort_hours,
+                    sprint_value=t.sprint_value,
+                    owner_name=t.owner_name,
+                    user_story_id=copy.id,
+                    position=pos,
+                ))
+                pos += 1
+
+    db.add(AuditLog(
+        entity_type="UserStory",
+        entity_id=copy.id,
+        action=AuditAction.created,
+        changed_by=current_user.username,
+        changed_at=datetime.now(timezone.utc),
+        changes={"title": copy.title, "duplicated_from": str(source.id)},
+    ))
+    await db.commit()
+    await db.refresh(copy)
+    return copy
 
 
 @router.get(

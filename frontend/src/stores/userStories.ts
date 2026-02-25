@@ -57,6 +57,12 @@ export const useUserStoriesStore = defineStore('userStories', () => {
     await api.reorderUserStories(items)
   }
 
+  async function duplicate(id: string, taskIds: string[]): Promise<UserStory> {
+    const story = await api.duplicateUserStory(id, { task_ids: taskIds })
+    userStories.value.push(story)
+    return story
+  }
+
   async function setValues(
     items: { id: string; business_value?: number | null; sprint_value?: number | null }[],
   ) {
@@ -74,5 +80,5 @@ export const useUserStoriesStore = defineStore('userStories', () => {
     }
   }
 
-  return { userStories, current, loading, error, fetchAll, fetchOne, create, update, remove, reorder, setValues }
+  return { userStories, current, loading, error, fetchAll, fetchOne, create, update, remove, reorder, duplicate, setValues }
 })

@@ -40,6 +40,10 @@ class UserStoryUpdate(BaseModel):
     sprint_id: Optional[UUID] = None
 
 
+class UserStoryDuplicateRequest(BaseModel):
+    task_ids: list[UUID] = []  # empty = no tasks copied; list = copy only these task IDs
+
+
 class StoryValueItem(BaseModel):
     id: UUID
     business_value: Optional[int] = None

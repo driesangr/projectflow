@@ -15,6 +15,7 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import UserStoryForm from '@/components/forms/UserStoryForm.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
+import DuplicateUserStoryModal from '@/components/common/DuplicateUserStoryModal.vue'
 import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
@@ -30,6 +31,7 @@ const showCreate = ref(false)
 const showEditDeliverable = ref(false)
 const editTarget = ref<UserStory | null>(null)
 const deleteTarget = ref<UserStory | null>(null)
+const duplicateTarget = ref<UserStory | null>(null)
 const deleting = ref(false)
 
 const storiesByStatus = computed(() => ({
@@ -110,6 +112,11 @@ onMounted(async () => {
     projectId.value = topic.project_id
   }
 })
+
+function handleStoryDuplicated(story: UserStory) {
+  duplicateTarget.value = null
+  router.push(`/user-stories/${story.id}`)
+}
 
 async function handleDeliverableEdit(data: DeliverableCreate) {
   const result = await execute(() => deliverablesStore.update(deliverableId, data))
@@ -226,6 +233,7 @@ async function handleDelete() {
                       </div>
                     </div>
                     <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="duplicateTarget = story"><DocumentDuplicateIcon class="h-3.5 w-3.5" /></button>
                       <button class="btn-icon" @click="editTarget = story"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
                       <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = story"><TrashIcon class="h-3.5 w-3.5" /></button>
                     </div>
@@ -258,6 +266,7 @@ async function handleDelete() {
                       </div>
                     </div>
                     <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="duplicateTarget = story"><DocumentDuplicateIcon class="h-3.5 w-3.5" /></button>
                       <button class="btn-icon" @click="editTarget = story"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
                       <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = story"><TrashIcon class="h-3.5 w-3.5" /></button>
                     </div>
@@ -289,6 +298,7 @@ async function handleDelete() {
                       </div>
                     </div>
                     <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="duplicateTarget = story"><DocumentDuplicateIcon class="h-3.5 w-3.5" /></button>
                       <button class="btn-icon" @click="editTarget = story"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
                       <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = story"><TrashIcon class="h-3.5 w-3.5" /></button>
                     </div>
@@ -318,6 +328,7 @@ async function handleDelete() {
                       </div>
                     </div>
                     <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <button class="btn-icon" @click="duplicateTarget = story"><DocumentDuplicateIcon class="h-3.5 w-3.5" /></button>
                       <button class="btn-icon" @click="editTarget = story"><PencilSquareIcon class="h-3.5 w-3.5" /></button>
                       <button class="btn-icon text-red-500 hover:bg-red-50" @click="deleteTarget = story"><TrashIcon class="h-3.5 w-3.5" /></button>
                     </div>
@@ -361,6 +372,14 @@ async function handleDelete() {
       :loading="deleting"
       @close="deleteTarget = null"
       @confirm="handleDelete"
+    />
+
+    <DuplicateUserStoryModal
+      :open="!!duplicateTarget"
+      :story-id="duplicateTarget?.id ?? ''"
+      :story-title="duplicateTarget?.title ?? ''"
+      @close="duplicateTarget = null"
+      @duplicated="handleStoryDuplicated"
     />
 
     <!-- Edit Deliverable Modal -->

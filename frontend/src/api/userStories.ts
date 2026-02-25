@@ -33,6 +33,14 @@ export async function reorderUserStories(items: { id: string; position: number }
   await apiClient.patch('/user-stories/reorder', items)
 }
 
+export async function duplicateUserStory(
+  id: string,
+  payload: { task_ids: string[] },
+): Promise<UserStory> {
+  const { data } = await apiClient.post<UserStory>(`/user-stories/${id}/duplicate`, payload)
+  return data
+}
+
 export async function setBulkStoryValues(
   items: { id: string; business_value?: number | null; sprint_value?: number | null }[],
 ): Promise<void> {
