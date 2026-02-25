@@ -22,7 +22,7 @@ import BugForm from '@/components/forms/BugForm.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
 import DuplicateUserStoryModal from '@/components/common/DuplicateUserStoryModal.vue'
 import DuplicateBugModal from '@/components/common/DuplicateBugModal.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon, ArrowLeftIcon, ArchiveBoxIcon, BookOpenIcon, BugAntIcon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
@@ -284,7 +284,10 @@ async function handleDeleteBug() {
     <template v-else-if="deliverablesStore.current">
       <div class="page-header">
         <div>
-          <h1 class="page-title">{{ deliverablesStore.current.title }}</h1>
+          <h1 class="page-title flex items-center gap-2">
+            <ArchiveBoxIcon class="h-6 w-6 text-emerald-500 flex-shrink-0" />
+            {{ deliverablesStore.current.title }}
+          </h1>
           <div class="flex items-center gap-2 mt-1">
             <StatusBadge :status="deliverablesStore.current.status" />
             <span v-if="deliverablesStore.current.epic_points" class="text-xs text-gray-500">
@@ -354,7 +357,10 @@ async function handleDeleteBug() {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BookOpenIcon class="h-3.5 w-3.5 text-violet-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ story.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
                         <span v-if="story.owner_name" class="text-xs text-gray-400">{{ story.owner_name }}</span>
@@ -387,7 +393,10 @@ async function handleDeleteBug() {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BookOpenIcon class="h-3.5 w-3.5 text-violet-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ story.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
                         <span v-if="story.owner_name" class="text-xs text-gray-400">{{ story.owner_name }}</span>
@@ -420,7 +429,10 @@ async function handleDeleteBug() {
                       <CheckCircleIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BookOpenIcon class="h-3.5 w-3.5 text-violet-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2">{{ story.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
                       </div>
@@ -449,7 +461,10 @@ async function handleDeleteBug() {
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BookOpenIcon class="h-3.5 w-3.5 text-violet-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/user-stories/${story.id}`" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2">{{ story.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
                         <span v-if="story.owner_name" class="text-xs text-gray-400">{{ story.owner_name }}</span>
@@ -505,7 +520,10 @@ async function handleDeleteBug() {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/bugs/${bug.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ bug.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BugAntIcon class="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/bugs/${bug.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ bug.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="bug.story_points" class="text-xs text-gray-400">{{ bug.story_points }} pts</span>
                         <span v-if="bug.owner_name" class="text-xs text-gray-400">{{ bug.owner_name }}</span>
@@ -538,7 +556,10 @@ async function handleDeleteBug() {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/bugs/${bug.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ bug.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BugAntIcon class="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/bugs/${bug.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ bug.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="bug.story_points" class="text-xs text-gray-400">{{ bug.story_points }} pts</span>
                         <span v-if="bug.owner_name" class="text-xs text-gray-400">{{ bug.owner_name }}</span>
@@ -571,7 +592,10 @@ async function handleDeleteBug() {
                       <CheckCircleIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/bugs/${bug.id}`" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ bug.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BugAntIcon class="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/bugs/${bug.id}`" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2">{{ bug.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="bug.story_points" class="text-xs text-gray-400">{{ bug.story_points }} pts</span>
                       </div>
@@ -600,7 +624,10 @@ async function handleDeleteBug() {
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/bugs/${bug.id}`" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2 block">{{ bug.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BugAntIcon class="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/bugs/${bug.id}`" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2">{{ bug.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="bug.story_points" class="text-xs text-gray-400">{{ bug.story_points }} pts</span>
                         <span v-if="bug.owner_name" class="text-xs text-gray-400">{{ bug.owner_name }}</span>

@@ -17,7 +17,7 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
 import ProjectForm from '@/components/forms/ProjectForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon, TagIcon, BookOpenIcon } from '@heroicons/vue/24/outline'
 import { useSprintsStore } from '@/stores/sprints'
 import draggable from 'vuedraggable'
 
@@ -254,6 +254,7 @@ async function handleDelete() {
                 />
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-1">
+                    <TagIcon class="h-4 w-4 text-amber-500 flex-shrink-0" />
                     <RouterLink
                       :to="`/topics/${topic.id}`"
                       class="font-medium text-gray-900 hover:text-brand-600 truncate"
@@ -322,6 +323,7 @@ async function handleDelete() {
                 />
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
+                    <BookOpenIcon class="h-3.5 w-3.5 text-violet-500 flex-shrink-0" />
                     <RouterLink :to="`/user-stories/${story.id}`" class="font-medium text-gray-900 hover:text-brand-600 truncate">
                       {{ story.title }}
                     </RouterLink>

@@ -29,6 +29,8 @@ import {
   Bars3Icon,
   DocumentDuplicateIcon,
   ArrowLeftIcon,
+  BookOpenIcon,
+  ListBulletIcon,
 } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
@@ -217,7 +219,10 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
     <template v-else-if="storiesStore.current">
       <div class="page-header">
         <div>
-          <h1 class="page-title">{{ storiesStore.current.title }}</h1>
+          <h1 class="page-title flex items-center gap-2">
+            <BookOpenIcon class="h-6 w-6 text-violet-500 flex-shrink-0" />
+            {{ storiesStore.current.title }}
+          </h1>
           <div class="flex items-center gap-2 mt-1">
             <StatusBadge :status="storiesStore.current.status" />
             <span v-if="storiesStore.current.story_points" class="text-xs text-gray-500">
@@ -308,7 +313,10 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="taskLink(task.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <ListBulletIcon class="h-3.5 w-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="taskLink(task.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ task.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
                         <span v-if="task.owner_name" class="text-xs text-gray-400">{{ task.owner_name }}</span>
@@ -352,7 +360,10 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="taskLink(task.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <ListBulletIcon class="h-3.5 w-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="taskLink(task.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ task.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
                         <span v-if="task.owner_name" class="text-xs text-gray-400">{{ task.owner_name }}</span>
@@ -396,7 +407,10 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
                       <CheckCircleIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="taskLink(task.id)" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ task.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <ListBulletIcon class="h-3.5 w-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="taskLink(task.id)" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2">{{ task.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="task.effort_hours" class="text-xs text-gray-400">{{ task.effort_hours }}h</span>
                       </div>

@@ -17,7 +17,7 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon, ArrowLeftIcon, TagIcon, ArchiveBoxIcon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
@@ -162,7 +162,10 @@ async function handleDuplicate(id: string) {
     <template v-else-if="topicsStore.current">
       <div class="page-header">
         <div>
-          <h1 class="page-title">{{ topicsStore.current.title }}</h1>
+          <h1 class="page-title flex items-center gap-2">
+            <TagIcon class="h-6 w-6 text-amber-500 flex-shrink-0" />
+            {{ topicsStore.current.title }}
+          </h1>
           <div class="flex items-center gap-2 mt-1">
             <StatusBadge :status="topicsStore.current.priority" />
             <MaturityBar :percent="topicsStore.current.maturity_percent" />
@@ -232,7 +235,10 @@ async function handleDuplicate(id: string) {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ d.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <ArchiveBoxIcon class="h-3.5 w-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ d.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
                         <span v-if="d.business_value != null" class="text-xs text-gray-400">BV {{ d.business_value }}</span>
@@ -266,7 +272,10 @@ async function handleDuplicate(id: string) {
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ d.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <ArchiveBoxIcon class="h-3.5 w-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ d.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
                         <span v-if="d.business_value != null" class="text-xs text-gray-400">BV {{ d.business_value }}</span>
@@ -300,7 +309,10 @@ async function handleDuplicate(id: string) {
                       <CheckCircleIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ d.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <ArchiveBoxIcon class="h-3.5 w-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2">{{ d.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
                         <span v-if="d.business_value != null" class="text-xs text-gray-400">BV {{ d.business_value }}</span>
@@ -331,7 +343,10 @@ async function handleDuplicate(id: string) {
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2 block">{{ d.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <ArchiveBoxIcon class="h-3.5 w-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="`/deliverables/${d.id}`" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2">{{ d.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="d.epic_points" class="text-xs text-gray-400">{{ d.epic_points }} pts</span>
                         <span v-if="d.business_value != null" class="text-xs text-gray-400">BV {{ d.business_value }}</span>

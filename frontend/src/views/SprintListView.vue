@@ -13,7 +13,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import SprintForm from '@/components/forms/SprintForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, ChevronRightIcon, CalendarDaysIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const projectId = route.params.projectId as string
@@ -84,7 +84,10 @@ function formatDate(d: string | null) {
     <Breadcrumb :items="breadcrumbs" />
 
     <div class="page-header">
-      <h1 class="page-title">Sprints</h1>
+      <h1 class="page-title flex items-center gap-2">
+        <CalendarDaysIcon class="h-6 w-6 text-blue-500 flex-shrink-0" />
+        Sprints
+      </h1>
       <button class="btn-primary" @click="showCreate = true">
         <PlusIcon class="h-4 w-4" />
         New Sprint
@@ -107,6 +110,7 @@ function formatDate(d: string | null) {
           <div class="flex items-center gap-3">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3">
+                <CalendarDaysIcon class="h-4 w-4 text-blue-500 flex-shrink-0" />
                 <RouterLink
                   :to="`/projects/${projectId}/sprints/${sprint.id}`"
                   class="font-medium text-gray-900 hover:text-brand-600"

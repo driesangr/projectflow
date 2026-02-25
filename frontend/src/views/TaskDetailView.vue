@@ -18,7 +18,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import TaskForm from '@/components/forms/TaskForm.vue'
-import { PencilSquareIcon, TrashIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
+import { PencilSquareIcon, TrashIcon, ArrowLeftIcon, ListBulletIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const router = useRouter()
@@ -155,7 +155,10 @@ async function handleDelete() {
     <template v-else-if="tasksStore.current">
       <div class="page-header">
         <div>
-          <h1 class="page-title">{{ tasksStore.current.title }}</h1>
+          <h1 class="page-title flex items-center gap-2">
+            <ListBulletIcon class="h-6 w-6 text-slate-500 flex-shrink-0" />
+            {{ tasksStore.current.title }}
+          </h1>
           <div class="flex items-center gap-2 mt-1">
             <StatusBadge :status="tasksStore.current.status" />
             <span v-if="tasksStore.current.effort_hours" class="text-xs text-gray-500">

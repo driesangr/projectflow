@@ -18,7 +18,7 @@ import UserStoryForm from '@/components/forms/UserStoryForm.vue'
 import BugForm from '@/components/forms/BugForm.vue'
 import DuplicateUserStoryModal from '@/components/common/DuplicateUserStoryModal.vue'
 import DuplicateBugModal from '@/components/common/DuplicateBugModal.vue'
-import { ArrowLeftIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon, CheckCircleIcon, ClockIcon, Bars3Icon, CalendarDaysIcon, BookOpenIcon, BugAntIcon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
 const route = useRoute()
@@ -250,7 +250,10 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
     <template v-else-if="sprintsStore.current">
       <div class="page-header">
         <div>
-          <h1 class="page-title">{{ sprintsStore.current.name }}</h1>
+          <h1 class="page-title flex items-center gap-2">
+            <CalendarDaysIcon class="h-6 w-6 text-blue-500 flex-shrink-0" />
+            {{ sprintsStore.current.name }}
+          </h1>
           <p class="text-sm text-gray-500 mt-1">
             {{ formatDate(sprintsStore.current.start_date) }} – {{ formatDate(sprintsStore.current.end_date) }}
           </p>
@@ -297,7 +300,10 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="storyLink(story.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BookOpenIcon class="h-3.5 w-3.5 text-violet-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="storyLink(story.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ story.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
                         <span v-if="story.owner_name" class="text-xs text-gray-400">{{ story.owner_name }}</span>
@@ -330,7 +336,10 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
                       <ClockIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="storyLink(story.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BookOpenIcon class="h-3.5 w-3.5 text-violet-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="storyLink(story.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ story.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
                         <span v-if="story.owner_name" class="text-xs text-gray-400">{{ story.owner_name }}</span>
@@ -363,7 +372,10 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
                       <CheckCircleIcon class="h-4 w-4" />
                     </button>
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="storyLink(story.id)" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BookOpenIcon class="h-3.5 w-3.5 text-violet-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="storyLink(story.id)" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2">{{ story.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
                       </div>
@@ -392,7 +404,10 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
                     <div class="flex-1 min-w-0">
-                      <RouterLink :to="storyLink(story.id)" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2 block">{{ story.title }}</RouterLink>
+                      <div class="flex items-start gap-1">
+                        <BookOpenIcon class="h-3.5 w-3.5 text-violet-500 flex-shrink-0 mt-0.5" />
+                        <RouterLink :to="storyLink(story.id)" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2">{{ story.title }}</RouterLink>
+                      </div>
                       <div class="flex items-center gap-2 mt-1">
                         <span v-if="story.story_points" class="text-xs text-gray-400">{{ story.story_points }} pts</span>
                         <span v-if="story.owner_name" class="text-xs text-gray-400">{{ story.owner_name }}</span>
@@ -435,7 +450,10 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
                         <ClockIcon class="h-4 w-4" />
                       </button>
                       <div class="flex-1 min-w-0">
-                        <RouterLink :to="bugLink(bug.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ bug.title }}</RouterLink>
+                        <div class="flex items-start gap-1">
+                          <BugAntIcon class="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                          <RouterLink :to="bugLink(bug.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ bug.title }}</RouterLink>
+                        </div>
                         <div class="flex items-center gap-2 mt-1">
                           <span v-if="bug.story_points" class="text-xs text-gray-400">{{ bug.story_points }} pts</span>
                           <span v-if="bug.owner_name" class="text-xs text-gray-400">{{ bug.owner_name }}</span>
@@ -468,7 +486,10 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
                         <ClockIcon class="h-4 w-4" />
                       </button>
                       <div class="flex-1 min-w-0">
-                        <RouterLink :to="bugLink(bug.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2 block">{{ bug.title }}</RouterLink>
+                        <div class="flex items-start gap-1">
+                          <BugAntIcon class="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                          <RouterLink :to="bugLink(bug.id)" class="text-sm font-medium text-gray-800 hover:text-brand-600 line-clamp-2">{{ bug.title }}</RouterLink>
+                        </div>
                         <div class="flex items-center gap-2 mt-1">
                           <span v-if="bug.story_points" class="text-xs text-gray-400">{{ bug.story_points }} pts</span>
                           <span v-if="bug.owner_name" class="text-xs text-gray-400">{{ bug.owner_name }}</span>
@@ -501,7 +522,10 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
                         <CheckCircleIcon class="h-4 w-4" />
                       </button>
                       <div class="flex-1 min-w-0">
-                        <RouterLink :to="bugLink(bug.id)" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2 block">{{ bug.title }}</RouterLink>
+                        <div class="flex items-start gap-1">
+                          <BugAntIcon class="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                          <RouterLink :to="bugLink(bug.id)" class="text-sm font-medium text-gray-500 line-through hover:text-brand-600 line-clamp-2">{{ bug.title }}</RouterLink>
+                        </div>
                         <div class="flex items-center gap-2 mt-1">
                           <span v-if="bug.story_points" class="text-xs text-gray-400">{{ bug.story_points }} pts</span>
                         </div>
@@ -530,7 +554,10 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
                     <div class="flex items-start gap-2">
                       <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
                       <div class="flex-1 min-w-0">
-                        <RouterLink :to="bugLink(bug.id)" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2 block">{{ bug.title }}</RouterLink>
+                        <div class="flex items-start gap-1">
+                          <BugAntIcon class="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                          <RouterLink :to="bugLink(bug.id)" class="text-sm font-medium text-gray-700 hover:text-brand-600 line-clamp-2">{{ bug.title }}</RouterLink>
+                        </div>
                         <div class="flex items-center gap-2 mt-1">
                           <span v-if="bug.story_points" class="text-xs text-gray-400">{{ bug.story_points }} pts</span>
                           <span v-if="bug.owner_name" class="text-xs text-gray-400">{{ bug.owner_name }}</span>
