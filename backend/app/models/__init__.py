@@ -13,6 +13,7 @@ from app.models.task import Task, TaskStatus  # noqa: F401
 from app.models.comment import Comment  # noqa: F401
 from app.models.link import Link  # noqa: F401
 from app.models.audit_log import AuditLog, AuditAction  # noqa: F401
+from app.models.project_membership import ProjectMembership, ProjectRole  # noqa: F401
 
 __all__ = [
     "Base",
@@ -38,4 +39,6 @@ __all__ = [
     "Link",
     "AuditLog",
     "AuditAction",
+    "ProjectMembership",
+    "ProjectRole",
 ]

@@ -1,4 +1,4 @@
-"""Project model."""
+"""Project model – extended with owner_id FK and memberships relation."""
 
 import enum
 import uuid
@@ -12,17 +12,17 @@ from app.models.base import Base, SoftDeleteMixin, TimestampMixin
 
 
 class MaturityLevel(str, enum.Enum):
-    idea = "idea"
-    concept = "concept"
+    idea        = "idea"
+    concept     = "concept"
     in_planning = "in_planning"
     in_progress = "in_progress"
-    completed = "completed"
-    on_hold = "on_hold"
+    completed   = "completed"
+    on_hold     = "on_hold"
 
 
 class ProjectStatus(str, enum.Enum):
-    active = "active"
-    on_hold = "on_hold"
+    active    = "active"
+    on_hold   = "on_hold"
     completed = "completed"
     cancelled = "cancelled"
 
@@ -30,24 +30,34 @@ class ProjectStatus(str, enum.Enum):
 class Project(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "projects"
 
-    title: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    start_date: Mapped[Optional[object]] = mapped_column(Date, nullable=True)
-    planned_end_date: Mapped[Optional[object]] = mapped_column(Date, nullable=True)
+    title:           Mapped[str]           = mapped_column(String(255), nullable=False)
+    description:     Mapped[Optional[str]] = mapped_column(Text,        nullable=True)
+    start_date:      Mapped[Optional[object]] = mapped_column(Date,     nullable=True)
+    planned_end_date: Mapped[Optional[object]] = mapped_column(Date,    nullable=True)
+
     maturity_level: Mapped[MaturityLevel] = mapped_column(
         Enum(MaturityLevel, name="maturitylevel"),
-        default=MaturityLevel.idea,
-        nullable=False,
-        index=True,
+        default=MaturityLevel.idea, nullable=False, index=True,
     )
     status: Mapped[ProjectStatus] = mapped_column(
         Enum(ProjectStatus, name="projectstatus"),
-        default=ProjectStatus.active,
-        nullable=False,
+        default=ProjectStatus.active, nullable=False, index=True,
+    )
+
+    # Legacy free-text field – kept for backwards compat
+    owner_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    # New: FK to the User who owns this project
+    owner_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
         index=True,
     )
-    owner_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    # Stored as a JSON array of strings
+    owner: Mapped[Optional["User"]] = relationship(  # noqa: F821
+        "User", foreign_keys=[owner_id], lazy="selectin"
+    )
+
     tags: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
 
     # Parent relation
@@ -71,4 +81,7 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
         lazy="selectin",
         primaryjoin="Deliverable.project_id == Project.id",
         foreign_keys="[Deliverable.project_id]",
+    )
+    memberships: Mapped[list["ProjectMembership"]] = relationship(  # noqa: F821
+        "ProjectMembership", back_populates="project", lazy="selectin"
     )
