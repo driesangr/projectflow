@@ -80,7 +80,8 @@ export interface Deliverable {
   business_value: number | null
   status: DeliverableStatus
   owner_name: string | null
-  topic_id: string
+  topic_id: string | null
+  project_id: string | null
   maturity_percent: number | null
   position: number
   created_at: string
@@ -200,10 +201,11 @@ export interface DeliverableCreate {
   business_value?: number | null
   status?: DeliverableStatus
   owner_name?: string | null
-  topic_id: string
+  topic_id?: string | null
+  project_id?: string | null
 }
 
-export type DeliverableUpdate = Partial<Omit<DeliverableCreate, 'topic_id'>>
+export type DeliverableUpdate = Partial<Omit<DeliverableCreate, 'topic_id' | 'project_id'>>
 
 export interface UserStoryCreate {
   title: string

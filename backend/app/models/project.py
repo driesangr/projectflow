@@ -65,3 +65,10 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
     sprints: Mapped[list["Sprint"]] = relationship(  # noqa: F821
         "Sprint", back_populates="project", lazy="selectin"
     )
+    direct_deliverables: Mapped[list["Deliverable"]] = relationship(  # noqa: F821
+        "Deliverable",
+        back_populates="project",
+        lazy="selectin",
+        primaryjoin="Deliverable.project_id == Project.id",
+        foreign_keys="[Deliverable.project_id]",
+    )

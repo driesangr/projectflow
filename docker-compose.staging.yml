@@ -1,0 +1,42 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: projectflow
+      POSTGRES_PASSWORD: projectflow
+      POSTGRES_DB: projectflow
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U projectflow -d projectflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: projectflow-backend:${VERSION}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://projectflow:projectflow@db/projectflow
+      SECRET_KEY: staging-secret-change-before-use
+      ACCESS_TOKEN_EXPIRE_MINUTES: 120
+    ports:
+      - "8001:8000"
+
+  frontend:
+    image: projectflow-frontend:${VERSION}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5174:80"
+
+volumes:
+  postgres_data_staging:

@@ -19,6 +19,11 @@ import {
   ChevronRightIcon,
   PlusIcon,
   CalendarDaysIcon,
+  TagIcon,
+  ArchiveBoxIcon,
+  BookOpenIcon,
+  BugAntIcon,
+  ListBulletIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -249,8 +254,39 @@ async function logout() {
 
     </div>
 
+    <!-- Artefakt-Legende -->
+    <div class="px-2 border-t border-gray-800 pt-3 pb-2">
+      <p class="px-3 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">Legende</p>
+      <div class="space-y-0.5">
+        <div class="flex items-center gap-2 px-3 py-1">
+          <CalendarDaysIcon class="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+          <span class="text-xs text-gray-400">Sprint</span>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1">
+          <TagIcon class="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
+          <span class="text-xs text-gray-400">Topic</span>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1">
+          <ArchiveBoxIcon class="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+          <span class="text-xs text-gray-400">Deliverable</span>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1">
+          <BookOpenIcon class="h-3.5 w-3.5 text-violet-400 flex-shrink-0" />
+          <span class="text-xs text-gray-400">User Story</span>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1">
+          <BugAntIcon class="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
+          <span class="text-xs text-gray-400">Bug</span>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1">
+          <ListBulletIcon class="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+          <span class="text-xs text-gray-400">Task</span>
+        </div>
+      </div>
+    </div>
+
     <!-- User + Logout -->
-    <div class="mt-auto px-2 border-t border-gray-800 pt-3 space-y-1">
+    <div class="px-2 border-t border-gray-800 pt-3 space-y-1">
       <div v-if="auth.user" class="px-3 py-2 text-xs text-gray-400 truncate">
         {{ auth.user.username }}
       </div>

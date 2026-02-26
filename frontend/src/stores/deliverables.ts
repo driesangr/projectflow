@@ -9,11 +9,11 @@ export const useDeliverablesStore = defineStore('deliverables', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  async function fetchAll(topicId?: string) {
+  async function fetchAll(topicId?: string, projectId?: string) {
     loading.value = true
     error.value = null
     try {
-      deliverables.value = await api.listDeliverables(topicId)
+      deliverables.value = await api.listDeliverables(topicId, projectId)
     } catch (e: any) {
       error.value = e.response?.data?.detail ?? 'Failed to load deliverables'
     } finally {

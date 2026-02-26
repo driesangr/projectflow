@@ -36,17 +36,26 @@ class Deliverable(Base, TimestampMixin, SoftDeleteMixin):
     )
     owner_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
-    # Foreign key
-    topic_id: Mapped[uuid.UUID] = mapped_column(
+    # Foreign keys
+    topic_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("topics.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
+        index=True,
+    )
+    project_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=True,
         index=True,
     )
 
     # Relations
-    topic: Mapped["Topic"] = relationship(  # noqa: F821
+    topic: Mapped[Optional["Topic"]] = relationship(  # noqa: F821
         "Topic", back_populates="deliverables"
+    )
+    project: Mapped[Optional["Project"]] = relationship(  # noqa: F821
+        "Project", back_populates="direct_deliverables"
     )
     user_stories: Mapped[list["UserStory"]] = relationship(  # noqa: F821
         "UserStory", back_populates="deliverable", lazy="selectin"

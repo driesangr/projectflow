@@ -117,7 +117,7 @@ onMounted(async () => {
   if (bugsStore.current) {
     await deliverablesStore.fetchOne(bugsStore.current.deliverable_id)
     if (deliverablesStore.current) {
-      await topicsStore.fetchOne(deliverablesStore.current.topic_id)
+      await topicsStore.fetchOne(deliverablesStore.current.topic_id!)
       if (topicsStore.current) {
         projectId.value = topicsStore.current.project_id
         await projectsStore.fetchOne(topicsStore.current.project_id)
@@ -185,6 +185,11 @@ const draggableTodo = ref<Task[]>([])
 const draggableInProgress = ref<Task[]>([])
 const draggableDone = ref<Task[]>([])
 const isDragging = ref(false)
+const showAllTasks = ref(false)
+const hiddenTasksCount = computed(() =>
+  [draggableTodo, draggableInProgress, draggableDone]
+    .reduce((s, c) => s + Math.max(0, c.value.length - 5), 0)
+)
 
 watch(tasksByStatus, (val) => {
   if (isDragging.value) return
@@ -299,8 +304,8 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
             group="tasks"
             @change="(evt) => onTaskChange('todo', draggableTodo, evt)"
           >
-            <template #item="{ element: task }">
-              <div class="card group">
+            <template #item="{ element: task, index }">
+              <div class="card group" v-show="showAllTasks || index < 5">
                 <div class="card-body py-3">
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -346,8 +351,8 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
             group="tasks"
             @change="(evt) => onTaskChange('in_progress', draggableInProgress, evt)"
           >
-            <template #item="{ element: task }">
-              <div class="card group border-blue-200">
+            <template #item="{ element: task, index }">
+              <div class="card group border-blue-200" v-show="showAllTasks || index < 5">
                 <div class="card-body py-3">
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -393,8 +398,8 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
             group="tasks"
             @change="(evt) => onTaskChange('done', draggableDone, evt)"
           >
-            <template #item="{ element: task }">
-              <div class="card group opacity-75">
+            <template #item="{ element: task, index }">
+              <div class="card group opacity-75" v-show="showAllTasks || index < 5">
                 <div class="card-body py-3">
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -424,6 +429,13 @@ async function onTaskChange(status: Task['status'], column: Task[], evt: any) {
             </template>
           </draggable>
         </div>
+      </div>
+      <div v-if="hiddenTasksCount > 0 || showAllTasks" class="mt-3">
+        <label class="flex items-center gap-2 text-sm text-gray-500 cursor-pointer select-none">
+          <input v-model="showAllTasks" type="checkbox" class="w-4 h-4 appearance-auto" />
+          Alle anzeigen
+          <span v-if="!showAllTasks" class="text-gray-400">({{ hiddenTasksCount }} weitere ausgeblendet)</span>
+        </label>
       </div>
     </template>
 

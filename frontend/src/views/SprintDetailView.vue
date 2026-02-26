@@ -92,6 +92,11 @@ const draggableInProgress = ref<UserStory[]>([])
 const draggableDone = ref<UserStory[]>([])
 const draggableOnHold = ref<UserStory[]>([])
 const isDragging = ref(false)
+const showAllStories = ref(false)
+const hiddenStoriesCount = computed(() =>
+  [storiesByStatus.value.todo, storiesByStatus.value.in_progress, storiesByStatus.value.done, storiesByStatus.value.on_hold]
+    .reduce((s, col) => s + Math.max(0, col.length - 5), 0)
+)
 
 watch(storiesByStatus, (val) => {
   if (isDragging.value) return
@@ -140,6 +145,11 @@ const draggableBugInProgress = ref<Bug[]>([])
 const draggableBugDone = ref<Bug[]>([])
 const draggableBugOnHold = ref<Bug[]>([])
 const isBugDragging = ref(false)
+const showAllBugs = ref(false)
+const hiddenBugsCount = computed(() =>
+  [bugsByStatus.value.todo, bugsByStatus.value.in_progress, bugsByStatus.value.done, bugsByStatus.value.on_hold]
+    .reduce((s, col) => s + Math.max(0, col.length - 5), 0)
+)
 
 watch(bugsByStatus, (val) => {
   if (isBugDragging.value) return
@@ -275,6 +285,13 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
 
       <!-- User Stories Kanban -->
       <ErrorBanner v-if="storiesStore.error" :message="storiesStore.error" class="mb-4" />
+      <div v-show="!storiesStore.loading && storiesStore.userStories.length > 0 && (hiddenStoriesCount > 0 || showAllStories)" class="flex justify-end mb-2">
+        <label class="flex items-center gap-2 text-sm text-gray-500 cursor-pointer select-none">
+          <input v-model="showAllStories" type="checkbox" class="h-4 w-4" />
+          Alle anzeigen
+          <span v-if="!showAllStories" class="text-gray-400">({{ hiddenStoriesCount }} weitere ausgeblendet)</span>
+        </label>
+      </div>
       <LoadingSpinner v-if="storiesStore.loading" />
 
       <EmptyState
@@ -291,8 +308,8 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
             To Do ({{ storiesByStatus.todo.length }})
           </h3>
           <draggable v-model="draggableTodo" group="stories" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onStoryChange('todo', draggableTodo, evt)">
-            <template #item="{ element: story }">
-              <div class="card group">
+            <template #item="{ element: story, index }">
+              <div v-show="showAllStories || index < 5" class="card group">
                 <div class="card-body py-3">
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -327,8 +344,8 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
             In Progress ({{ storiesByStatus.in_progress.length }})
           </h3>
           <draggable v-model="draggableInProgress" group="stories" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onStoryChange('in_progress', draggableInProgress, evt)">
-            <template #item="{ element: story }">
-              <div class="card group border-blue-200">
+            <template #item="{ element: story, index }">
+              <div v-show="showAllStories || index < 5" class="card group border-blue-200">
                 <div class="card-body py-3">
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -363,8 +380,8 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
             Done ({{ storiesByStatus.done.length }})
           </h3>
           <draggable v-model="draggableDone" group="stories" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onStoryChange('done', draggableDone, evt)">
-            <template #item="{ element: story }">
-              <div class="card group opacity-75">
+            <template #item="{ element: story, index }">
+              <div v-show="showAllStories || index < 5" class="card group opacity-75">
                 <div class="card-body py-3">
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -398,8 +415,8 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
             On Hold ({{ storiesByStatus.on_hold.length }})
           </h3>
           <draggable v-model="draggableOnHold" group="stories" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onStoryChange('on_hold', draggableOnHold, evt)">
-            <template #item="{ element: story }">
-              <div class="card group border-yellow-200">
+            <template #item="{ element: story, index }">
+              <div v-show="showAllStories || index < 5" class="card group border-yellow-200">
                 <div class="card-body py-3">
                   <div class="flex items-start gap-2">
                     <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -431,6 +448,13 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
       <div v-if="bugsStore.bugs.length > 0 || bugsStore.loading" class="mt-8">
         <h2 class="section-title mb-3">Bugs</h2>
         <ErrorBanner v-if="bugsStore.error" :message="bugsStore.error" class="mb-4" />
+        <div v-show="!bugsStore.loading && (hiddenBugsCount > 0 || showAllBugs)" class="flex justify-end mb-2">
+          <label class="flex items-center gap-2 text-sm text-gray-500 cursor-pointer select-none">
+            <input v-model="showAllBugs" type="checkbox" class="h-4 w-4" />
+            Alle anzeigen
+            <span v-if="!showAllBugs" class="text-gray-400">({{ hiddenBugsCount }} weitere ausgeblendet)</span>
+          </label>
+        </div>
         <LoadingSpinner v-if="bugsStore.loading" />
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -441,8 +465,8 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
               To Do ({{ bugsByStatus.todo.length }})
             </h3>
             <draggable v-model="draggableBugTodo" group="bugs" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onBugChange('todo', draggableBugTodo, evt)">
-              <template #item="{ element: bug }">
-                <div class="card group">
+              <template #item="{ element: bug, index }">
+                <div v-show="showAllBugs || index < 5" class="card group">
                   <div class="card-body py-3">
                     <div class="flex items-start gap-2">
                       <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -477,8 +501,8 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
               In Progress ({{ bugsByStatus.in_progress.length }})
             </h3>
             <draggable v-model="draggableBugInProgress" group="bugs" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onBugChange('in_progress', draggableBugInProgress, evt)">
-              <template #item="{ element: bug }">
-                <div class="card group border-blue-200">
+              <template #item="{ element: bug, index }">
+                <div v-show="showAllBugs || index < 5" class="card group border-blue-200">
                   <div class="card-body py-3">
                     <div class="flex items-start gap-2">
                       <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -513,8 +537,8 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
               Done ({{ bugsByStatus.done.length }})
             </h3>
             <draggable v-model="draggableBugDone" group="bugs" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onBugChange('done', draggableBugDone, evt)">
-              <template #item="{ element: bug }">
-                <div class="card group opacity-75">
+              <template #item="{ element: bug, index }">
+                <div v-show="showAllBugs || index < 5" class="card group opacity-75">
                   <div class="card-body py-3">
                     <div class="flex items-start gap-2">
                       <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -548,8 +572,8 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
               On Hold ({{ bugsByStatus.on_hold.length }})
             </h3>
             <draggable v-model="draggableBugOnHold" group="bugs" class="space-y-2 min-h-[2rem]" item-key="id" handle=".drag-handle" animation="150" @change="(evt) => onBugChange('on_hold', draggableBugOnHold, evt)">
-              <template #item="{ element: bug }">
-                <div class="card group border-yellow-200">
+              <template #item="{ element: bug, index }">
+                <div v-show="showAllBugs || index < 5" class="card group border-yellow-200">
                   <div class="card-body py-3">
                     <div class="flex items-start gap-2">
                       <Bars3Icon class="drag-handle h-4 w-4 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
@@ -576,6 +600,7 @@ watch([projectId, sprintId], ([pid, sid]) => loadData(pid, sid))
           </div>
 
         </div>
+
       </div>
     </template>
 

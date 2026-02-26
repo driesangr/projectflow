@@ -161,7 +161,7 @@ async def recalculate_upwards(
         from app.models.deliverable import Deliverable
 
         deliverable = await db.get(Deliverable, deliverable_id)
-        if deliverable and not deliverable.is_deleted:
+        if deliverable and not deliverable.is_deleted and deliverable.topic_id:
             await calculate_topic_maturity(deliverable.topic_id, db)
         return
 
@@ -178,5 +178,5 @@ async def recalculate_upwards(
         from app.models.deliverable import Deliverable
 
         deliverable = await db.get(Deliverable, deliverable_id)
-        if deliverable and not deliverable.is_deleted:
+        if deliverable and not deliverable.is_deleted and deliverable.topic_id:
             await calculate_topic_maturity(deliverable.topic_id, db)

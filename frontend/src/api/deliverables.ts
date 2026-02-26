@@ -1,8 +1,10 @@
 import apiClient from './client'
 import type { Deliverable, DeliverableCreate, DeliverableUpdate } from '@/types'
 
-export async function listDeliverables(topicId?: string): Promise<Deliverable[]> {
-  const params = topicId ? { topic_id: topicId } : {}
+export async function listDeliverables(topicId?: string, projectId?: string): Promise<Deliverable[]> {
+  const params: Record<string, string> = {}
+  if (topicId) params.topic_id = topicId
+  if (projectId) params.project_id = projectId
   const { data } = await apiClient.get<Deliverable[]>('/deliverables/', { params })
   return data
 }
@@ -32,5 +34,13 @@ export async function reorderDeliverables(items: { id: string; position: number 
 
 export async function duplicateDeliverable(id: string): Promise<Deliverable> {
   const { data } = await apiClient.post<Deliverable>(`/deliverables/${id}/duplicate`)
+  return data
+}
+
+export async function moveDeliverable(
+  id: string,
+  payload: { topic_id?: string | null; project_id?: string | null },
+): Promise<Deliverable> {
+  const { data } = await apiClient.patch<Deliverable>(`/deliverables/${id}/move`, payload)
   return data
 }

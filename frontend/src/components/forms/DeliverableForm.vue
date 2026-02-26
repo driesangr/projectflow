@@ -3,7 +3,8 @@ import { reactive } from 'vue'
 import type { Deliverable, DeliverableCreate } from '@/types'
 
 const props = defineProps<{
-  topicId: string
+  topicId?: string
+  projectId?: string
   initial?: Partial<Deliverable>
   loading?: boolean
 }>()
@@ -30,7 +31,8 @@ function submit() {
     business_value: form.business_value,
     status: form.status,
     owner_name: form.owner_name || null,
-    topic_id: props.topicId,
+    topic_id: props.topicId ?? undefined,
+    project_id: props.projectId ?? undefined,
   })
 }
 </script>

@@ -92,7 +92,7 @@ const breadcrumbs = computed(() => {
 async function loadParentChain(deliverableId: string) {
   await deliverablesStore.fetchOne(deliverableId)
   if (deliverablesStore.current) {
-    await topicsStore.fetchOne(deliverablesStore.current.topic_id)
+    await topicsStore.fetchOne(deliverablesStore.current.topic_id!)
     if (topicsStore.current) {
       await projectsStore.fetchOne(topicsStore.current.project_id)
       if (projectsStore.current?.project_group_id) {

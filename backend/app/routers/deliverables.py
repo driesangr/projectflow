@@ -12,7 +12,7 @@ from app.models.audit_log import AuditAction, AuditLog
 from app.models.deliverable import Deliverable
 from app.models.user import User
 from app.routers.auth import get_current_user
-from app.schemas.deliverable import DeliverableCreate, DeliverableResponse, DeliverableUpdate
+from app.schemas.deliverable import DeliverableCreate, DeliverableMove, DeliverableResponse, DeliverableUpdate
 from app.schemas.reorder import ReorderItem
 from app.services.maturity import recalculate_upwards
 
@@ -22,12 +22,15 @@ router = APIRouter(prefix="/deliverables", tags=["deliverables"])
 @router.get("/", response_model=list[DeliverableResponse], summary="List deliverables")
 async def list_deliverables(
     topic_id: UUID | None = Query(default=None),
+    project_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ) -> list[Deliverable]:
     query = select(Deliverable).where(Deliverable.is_deleted.is_(False))
     if topic_id:
         query = query.where(Deliverable.topic_id == topic_id)
+    if project_id:
+        query = query.where(Deliverable.project_id == project_id)
     result = await db.execute(query.order_by(Deliverable.position.asc(), Deliverable.created_at.asc()))
     return result.scalars().all()
 
@@ -69,9 +72,13 @@ async def create_deliverable(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Deliverable:
+    if payload.topic_id:
+        count_filter = Deliverable.topic_id == payload.topic_id
+    else:
+        count_filter = Deliverable.project_id == payload.project_id
     count_res = await db.execute(
         select(func.count(Deliverable.id)).where(
-            Deliverable.topic_id == payload.topic_id,
+            count_filter,
             Deliverable.is_deleted.is_(False),
         )
     )
@@ -127,7 +134,7 @@ async def update_deliverable(
             changes=changes,
         ))
 
-    if status_changed:
+    if status_changed and deliverable.topic_id:
         from app.services.maturity import calculate_topic_maturity
         await calculate_topic_maturity(deliverable.topic_id, db)
 
@@ -149,10 +156,16 @@ async def duplicate_deliverable(
     if not source or source.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deliverable not found")
 
-    # Fetch existing titles in the same topic to guarantee uniqueness
+    # Determine parent filter for sibling queries
+    if source.topic_id:
+        parent_filter = Deliverable.topic_id == source.topic_id
+    else:
+        parent_filter = Deliverable.project_id == source.project_id
+
+    # Fetch existing titles in the same parent to guarantee uniqueness
     titles_result = await db.execute(
         select(Deliverable.title).where(
-            Deliverable.topic_id == source.topic_id,
+            parent_filter,
             Deliverable.is_deleted.is_(False),
         )
     )
@@ -168,7 +181,7 @@ async def duplicate_deliverable(
 
     count_res = await db.execute(
         select(func.count(Deliverable.id)).where(
-            Deliverable.topic_id == source.topic_id,
+            parent_filter,
             Deliverable.is_deleted.is_(False),
         )
     )
@@ -180,6 +193,7 @@ async def duplicate_deliverable(
         status=source.status,
         owner_name=source.owner_name,
         topic_id=source.topic_id,
+        project_id=source.project_id,
         position=count_res.scalar() or 0,
     )
     db.add(copy)
@@ -196,6 +210,55 @@ async def duplicate_deliverable(
     await db.commit()
     await db.refresh(copy)
     return copy
+
+
+@router.patch(
+    "/{deliverable_id}/move", response_model=DeliverableResponse,
+    summary="Move a deliverable to a different parent"
+)
+async def move_deliverable(
+    deliverable_id: UUID,
+    payload: DeliverableMove,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Deliverable:
+    deliverable = await db.get(Deliverable, deliverable_id)
+    if not deliverable or deliverable.is_deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deliverable not found")
+
+    old_topic_id = deliverable.topic_id
+
+    deliverable.topic_id = payload.topic_id
+    deliverable.project_id = payload.project_id
+
+    db.add(AuditLog(
+        entity_type="Deliverable",
+        entity_id=deliverable.id,
+        action=AuditAction.updated,
+        changed_by=current_user.username,
+        changed_at=datetime.now(timezone.utc),
+        changes={
+            "topic_id": {"old": str(old_topic_id), "new": str(payload.topic_id)},
+            "project_id": {"old": str(deliverable.project_id), "new": str(payload.project_id)},
+        },
+    ))
+
+    await db.commit()
+    await db.refresh(deliverable)
+
+    # Recalculate maturity for old topic
+    if old_topic_id:
+        from app.services.maturity import calculate_topic_maturity
+        await calculate_topic_maturity(old_topic_id, db)
+        await db.commit()
+
+    # Recalculate maturity for new topic
+    if payload.topic_id:
+        from app.services.maturity import calculate_topic_maturity
+        await calculate_topic_maturity(payload.topic_id, db)
+        await db.commit()
+
+    return deliverable
 
 
 @router.delete(
@@ -222,6 +285,7 @@ async def delete_deliverable(
         changed_at=datetime.now(timezone.utc),
         changes={"title": deliverable.title},
     ))
-    from app.services.maturity import calculate_topic_maturity
-    await calculate_topic_maturity(deliverable.topic_id, db)
+    if deliverable.topic_id:
+        from app.services.maturity import calculate_topic_maturity
+        await calculate_topic_maturity(deliverable.topic_id, db)
     await db.commit()

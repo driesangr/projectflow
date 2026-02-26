@@ -4,9 +4,10 @@ import { useRoute } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { useProjectGroupsStore } from '@/stores/projectGroups'
 import { useTopicsStore } from '@/stores/topics'
+import { useDeliverablesStore } from '@/stores/deliverables'
 import { useUserStoriesStore } from '@/stores/userStories'
 import { useApi } from '@/composables/useApi'
-import type { Topic, TopicCreate, UserStory, ProjectCreate } from '@/types'
+import type { Topic, TopicCreate, UserStory, ProjectCreate, Deliverable, DeliverableCreate } from '@/types'
 import Breadcrumb from '@/components/layout/Breadcrumb.vue'
 import Modal from '@/components/common/Modal.vue'
 import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
@@ -17,7 +18,8 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import MaturityBar from '@/components/common/MaturityBar.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
 import ProjectForm from '@/components/forms/ProjectForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon, TagIcon, BookOpenIcon } from '@heroicons/vue/24/outline'
+import DeliverableForm from '@/components/forms/DeliverableForm.vue'
+import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon, TagIcon, BookOpenIcon, ArchiveBoxIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import { useSprintsStore } from '@/stores/sprints'
 import draggable from 'vuedraggable'
 
@@ -27,6 +29,7 @@ const projectId = route.params.projectId as string
 const projectsStore = useProjectsStore()
 const projectGroupsStore = useProjectGroupsStore()
 const topicsStore = useTopicsStore()
+const deliverablesStore = useDeliverablesStore()
 const storiesStore = useUserStoriesStore()
 const sprintsStore = useSprintsStore()
 const { loading: saving, error: saveError, execute } = useApi()
@@ -36,6 +39,15 @@ const showEditProject = ref(false)
 const editTarget = ref<Topic | null>(null)
 const deleteTarget = ref<Topic | null>(null)
 const deleting = ref(false)
+const hideDone = ref(true)
+
+// Deliverable state
+const deliverablesExpanded = ref(false)
+const showCreateDeliverable = ref(false)
+const editDeliverableTarget = ref<Deliverable | null>(null)
+const deleteDeliverableTarget = ref<Deliverable | null>(null)
+const deletingDeliverable = ref(false)
+const draggableDeliverables = ref<Deliverable[]>([])
 
 type StorySortKey = 'business_value' | 'title' | 'story_points'
 type SortDirection = 'asc' | 'desc'
@@ -43,7 +55,10 @@ const storySortKey = ref<StorySortKey>('business_value')
 const storySortDir = ref<SortDirection>('desc')
 
 const sortedProjectStories = computed(() => {
-  return [...storiesStore.userStories].sort((a, b) => {
+  const list = hideDone.value
+    ? storiesStore.userStories.filter(s => s.status !== 'done')
+    : storiesStore.userStories
+  return [...list].sort((a, b) => {
     let result = 0
     if (storySortKey.value === 'business_value') {
       result = (a.business_value ?? -1) - (b.business_value ?? -1)
@@ -90,6 +105,7 @@ const draggableTopics = ref<typeof topicsStore.topics>([])
 const draggableProjectStories = ref<typeof storiesStore.userStories>([])
 watch(sortedTopics, (val) => { draggableTopics.value = [...val] }, { immediate: true })
 watch(sortedProjectStories, (val) => { draggableProjectStories.value = [...val] }, { immediate: true })
+watch(() => deliverablesStore.deliverables, (val) => { draggableDeliverables.value = [...val].sort((a, b) => a.position - b.position) }, { immediate: true })
 
 async function onTopicDragEnd() {
   if (sortKey.value !== 'position') return
@@ -101,6 +117,10 @@ async function onProjectStoryDragEnd() {
   await storiesStore.setValues(
     draggableProjectStories.value.map((s, i) => ({ id: s.id, business_value: (n - i) * 10 })),
   )
+}
+
+async function onDeliverableDragEnd() {
+  await deliverablesStore.reorder(draggableDeliverables.value.map((d, idx) => ({ id: d.id, position: idx })))
 }
 
 const breadcrumbs = computed(() => {
@@ -122,9 +142,11 @@ onMounted(async () => {
   }
   await Promise.all([
     topicsStore.fetchAll(projectId),
+    deliverablesStore.fetchAll(undefined, projectId),
     storiesStore.fetchAll(undefined, undefined, projectId),
     sprintsStore.fetchAll(projectId),
   ])
+  if (deliverablesStore.deliverables.length > 0) deliverablesExpanded.value = true
 })
 
 async function handleProjectEdit(data: ProjectCreate) {
@@ -158,6 +180,31 @@ async function handleDelete() {
     deleteTarget.value = null
   } finally {
     deleting.value = false
+  }
+}
+
+async function handleCreateDeliverable(data: DeliverableCreate) {
+  const result = await execute(() => deliverablesStore.create(data))
+  if (result) {
+    showCreateDeliverable.value = false
+    deliverablesExpanded.value = true
+  }
+}
+
+async function handleEditDeliverable(data: DeliverableCreate) {
+  if (!editDeliverableTarget.value) return
+  const result = await execute(() => deliverablesStore.update(editDeliverableTarget.value!.id, data))
+  if (result) editDeliverableTarget.value = null
+}
+
+async function handleDeleteDeliverable() {
+  if (!deleteDeliverableTarget.value) return
+  deletingDeliverable.value = true
+  try {
+    await deliverablesStore.remove(deleteDeliverableTarget.value.id)
+    deleteDeliverableTarget.value = null
+  } finally {
+    deletingDeliverable.value = false
   }
 }
 </script>
@@ -199,6 +246,18 @@ async function handleDelete() {
         {{ projectsStore.current.description }}
       </p>
 
+      <!-- Filter -->
+      <div class="flex items-center gap-2 mb-5">
+        <label class="flex items-center gap-2 text-sm text-gray-500 cursor-pointer select-none">
+          <input
+            v-model="hideDone"
+            type="checkbox"
+            class="w-4 h-4 appearance-auto cursor-pointer"
+          />
+          Done-Einträge ausblenden
+        </label>
+      </div>
+
       <!-- Topics section -->
       <div class="flex items-center justify-between mb-3">
         <h2 class="section-title mb-0">Topics</h2>
@@ -220,6 +279,10 @@ async function handleDelete() {
           <button class="btn-primary btn-sm" @click="showCreate = true">
             <PlusIcon class="h-3.5 w-3.5" />
             Add Topic
+          </button>
+          <button class="btn-primary btn-sm" @click="showCreateDeliverable = true">
+            <PlusIcon class="h-3.5 w-3.5" />
+            Add Deliverable
           </button>
         </div>
       </div>
@@ -281,6 +344,74 @@ async function handleDelete() {
           </div>
         </template>
       </draggable>
+      <!-- Deliverables section -->
+      <div class="flex items-center justify-between mt-8 mb-3">
+        <button
+          class="flex items-center gap-1.5 section-title mb-0 hover:text-brand-600 transition-colors"
+          @click="deliverablesExpanded = !deliverablesExpanded"
+        >
+          <ChevronDownIcon v-if="deliverablesExpanded" class="h-4 w-4" />
+          <ChevronRightIcon v-else class="h-4 w-4" />
+          Deliverables
+          <span v-if="deliverablesStore.deliverables.length > 0" class="text-sm font-normal text-gray-400">({{ deliverablesStore.deliverables.length }})</span>
+        </button>
+        <button class="btn-primary btn-sm" @click="showCreateDeliverable = true">
+          <PlusIcon class="h-3.5 w-3.5" />
+          Add Deliverable
+        </button>
+      </div>
+
+      <template v-if="deliverablesExpanded">
+        <ErrorBanner v-if="deliverablesStore.error" :message="deliverablesStore.error" class="mb-3" />
+        <LoadingSpinner v-if="deliverablesStore.loading" />
+
+        <EmptyState v-else-if="deliverablesStore.deliverables.length === 0" title="No direct deliverables" description="Deliverables without a topic go here." />
+
+      <draggable
+        v-else
+        v-model="draggableDeliverables"
+        class="space-y-2"
+        item-key="id"
+        handle=".drag-handle"
+        animation="150"
+        @end="onDeliverableDragEnd"
+      >
+        <template #item="{ element: deliverable }">
+          <div class="card group">
+            <div class="card-body">
+              <div class="flex items-start gap-3">
+                <Bars3Icon class="drag-handle h-5 w-5 flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing mt-0.5" />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <ArchiveBoxIcon class="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                    <RouterLink
+                      :to="`/deliverables/${deliverable.id}`"
+                      class="font-medium text-gray-900 hover:text-brand-600 truncate"
+                    >
+                      {{ deliverable.title }}
+                    </RouterLink>
+                    <StatusBadge :status="deliverable.status" />
+                  </div>
+                  <p v-if="deliverable.description" class="text-sm text-gray-500 line-clamp-1 mb-2">
+                    {{ deliverable.description }}
+                  </p>
+                  <MaturityBar :percent="deliverable.maturity_percent" />
+                </div>
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  <button class="btn-icon" title="Edit" @click="editDeliverableTarget = deliverable">
+                    <PencilSquareIcon class="h-4 w-4" />
+                  </button>
+                  <button class="btn-icon text-red-500 hover:text-red-700 hover:bg-red-50" title="Delete" @click="deleteDeliverableTarget = deliverable">
+                    <TrashIcon class="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </draggable>
+      </template>
+
       <!-- User Stories section -->
       <div class="flex items-center justify-between mt-8 mb-3">
         <h2 class="section-title mb-0">User Stories</h2>
@@ -374,13 +505,41 @@ async function handleDelete() {
       />
     </Modal>
 
-    <!-- Delete Confirm -->
+    <!-- Delete Confirm (Topic) -->
     <ConfirmDelete
       :open="!!deleteTarget"
       :item-name="deleteTarget?.title ?? ''"
       :loading="deleting"
       @close="deleteTarget = null"
       @confirm="handleDelete"
+    />
+
+    <!-- Create Deliverable Modal -->
+    <Modal :open="showCreateDeliverable" title="New Deliverable" @close="showCreateDeliverable = false">
+      <ErrorBanner v-if="saveError" :message="saveError" class="mb-3" />
+      <DeliverableForm :project-id="projectId" :loading="saving" @submit="handleCreateDeliverable" @cancel="showCreateDeliverable = false" />
+    </Modal>
+
+    <!-- Edit Deliverable Modal -->
+    <Modal :open="!!editDeliverableTarget" title="Edit Deliverable" @close="editDeliverableTarget = null">
+      <ErrorBanner v-if="saveError" :message="saveError" class="mb-3" />
+      <DeliverableForm
+        v-if="editDeliverableTarget"
+        :project-id="projectId"
+        :initial="editDeliverableTarget"
+        :loading="saving"
+        @submit="handleEditDeliverable"
+        @cancel="editDeliverableTarget = null"
+      />
+    </Modal>
+
+    <!-- Delete Deliverable Confirm -->
+    <ConfirmDelete
+      :open="!!deleteDeliverableTarget"
+      :item-name="deleteDeliverableTarget?.title ?? ''"
+      :loading="deletingDeliverable"
+      @close="deleteDeliverableTarget = null"
+      @confirm="handleDeleteDeliverable"
     />
   </div>
 </template>
