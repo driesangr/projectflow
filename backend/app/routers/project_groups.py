@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.permissions import require_global_admin
 from app.database import get_db
 from app.models.audit_log import AuditAction, AuditLog
 from app.models.project_group import ProjectGroup
@@ -47,7 +48,7 @@ async def get_project_group(
 async def create_project_group(
     payload: ProjectGroupCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_global_admin()),
 ) -> ProjectGroup:
     group = ProjectGroup(**payload.model_dump())
     db.add(group)
@@ -72,7 +73,7 @@ async def update_project_group(
     group_id: UUID,
     payload: ProjectGroupUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_global_admin()),
 ) -> ProjectGroup:
     group = await db.get(ProjectGroup, group_id)
     if not group or group.is_deleted:
@@ -105,7 +106,7 @@ async def update_project_group(
 async def delete_project_group(
     group_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_global_admin()),
 ) -> None:
     group = await db.get(ProjectGroup, group_id)
     if not group or group.is_deleted:

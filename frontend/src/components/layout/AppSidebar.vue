@@ -24,6 +24,8 @@ import {
   BookOpenIcon,
   BugAntIcon,
   ListBulletIcon,
+  Cog6ToothIcon,
+  LockClosedIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -285,11 +287,31 @@ async function logout() {
       </div>
     </div>
 
-    <!-- User + Logout -->
+    <!-- Konfiguration (nur Admin+) -->
+    <div
+      v-if="auth.user?.global_role === 'admin' || auth.user?.global_role === 'superuser'"
+      class="px-2 border-t border-gray-800 pt-2"
+    >
+      <RouterLink
+        to="/config/users"
+        class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+        active-class="bg-gray-800 text-white"
+      >
+        <Cog6ToothIcon class="h-5 w-5" />
+        Benutzer
+      </RouterLink>
+      <RouterLink
+        to="/config/permissions"
+        class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+        active-class="bg-gray-800 text-white"
+      >
+        <LockClosedIcon class="h-5 w-5" />
+        Berechtigungen
+      </RouterLink>
+    </div>
+
+    <!-- Logout -->
     <div class="px-2 border-t border-gray-800 pt-3 space-y-1">
-      <div v-if="auth.user" class="px-3 py-2 text-xs text-gray-400 truncate">
-        {{ auth.user.username }}
-      </div>
       <button
         class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
         @click="logout"

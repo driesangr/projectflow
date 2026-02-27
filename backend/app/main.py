@@ -28,6 +28,7 @@ from app.routers.tasks        import router as tasks_router
 # ── New routers ──
 from app.routers.memberships  import router as memberships_router
 from app.routers.users        import router as users_router
+from app.routers.permissions  import router as permissions_router
 
 
 @asynccontextmanager
@@ -62,6 +63,7 @@ def create_app() -> FastAPI:
     application.include_router(project_groups_router)
     application.include_router(projects_router)
     application.include_router(memberships_router)     # NEW
+    application.include_router(permissions_router)     # NEW
     application.include_router(sprints_router)
     application.include_router(topics_router)
     application.include_router(deliverables_router)

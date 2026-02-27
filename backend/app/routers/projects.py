@@ -7,9 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.permissions import check_artifact_permission, require_artifact_permission
 from app.database import get_db
 from app.models.audit_log import AuditAction, AuditLog
 from app.models.project import Project
+from app.models.role_permission import ArtifactType
 from app.models.user import User
 from app.routers.auth import get_current_user
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
@@ -32,7 +34,7 @@ async def list_projects(
 async def get_project(
     project_id: UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_artifact_permission(ArtifactType.project, "read")),
 ) -> Project:
     project = await db.get(Project, project_id)
     if not project or project.is_deleted:
@@ -72,7 +74,7 @@ async def update_project(
     project_id: UUID,
     payload: ProjectUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_artifact_permission(ArtifactType.project, "write")),
 ) -> Project:
     project = await db.get(Project, project_id)
     if not project or project.is_deleted:
@@ -105,7 +107,7 @@ async def update_project(
 async def delete_project(
     project_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_artifact_permission(ArtifactType.project, "delete")),
 ) -> None:
     project = await db.get(Project, project_id)
     if not project or project.is_deleted:

@@ -19,7 +19,8 @@ import MaturityBar from '@/components/common/MaturityBar.vue'
 import TopicForm from '@/components/forms/TopicForm.vue'
 import ProjectForm from '@/components/forms/ProjectForm.vue'
 import DeliverableForm from '@/components/forms/DeliverableForm.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon, TagIcon, BookOpenIcon, ArchiveBoxIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
+import ProjectMembersTab from '@/components/common/ProjectMembersTab.vue'
+import { PlusIcon, PencilSquareIcon, TrashIcon, BoltIcon, ArrowUpIcon, ArrowDownIcon, Bars3Icon, TagIcon, BookOpenIcon, ArchiveBoxIcon, ChevronDownIcon, ChevronRightIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { useSprintsStore } from '@/stores/sprints'
 import draggable from 'vuedraggable'
 
@@ -40,6 +41,7 @@ const editTarget = ref<Topic | null>(null)
 const deleteTarget = ref<Topic | null>(null)
 const deleting = ref(false)
 const hideDone = ref(true)
+const activeTab = ref<'content' | 'members'>('content')
 
 // Deliverable state
 const deliverablesExpanded = ref(false)
@@ -245,6 +247,35 @@ async function handleDeleteDeliverable() {
       <p v-if="projectsStore.current.description" class="text-sm text-gray-600 mb-6">
         {{ projectsStore.current.description }}
       </p>
+
+      <!-- Tab-Navigation -->
+      <div class="flex gap-1 mb-6 border-b border-gray-200">
+        <button
+          class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
+          :class="activeTab === 'content'
+            ? 'border-indigo-600 text-indigo-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700'"
+          @click="activeTab = 'content'"
+        >
+          Inhalt
+        </button>
+        <button
+          class="flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
+          :class="activeTab === 'members'
+            ? 'border-indigo-600 text-indigo-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700'"
+          @click="activeTab = 'members'"
+        >
+          <UsersIcon class="h-4 w-4" />
+          Mitglieder
+        </button>
+      </div>
+
+      <!-- Mitglieder-Tab -->
+      <ProjectMembersTab v-if="activeTab === 'members'" :project-id="projectId" />
+
+      <!-- Inhalts-Tab -->
+      <template v-if="activeTab === 'content'">
 
       <!-- Filter -->
       <div class="flex items-center gap-2 mb-5">
@@ -473,6 +504,8 @@ async function handleDeleteDeliverable() {
         </template>
       </draggable>
     </template>
+
+    </template><!-- Ende content-Tab -->
 
     <!-- Edit Project Modal -->
     <Modal :open="showEditProject" title="Projekt bearbeiten" @close="showEditProject = false">

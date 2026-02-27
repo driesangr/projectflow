@@ -8,9 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.permissions import check_artifact_permission
 from app.database import get_db
 from app.models.audit_log import AuditAction, AuditLog
 from app.models.deliverable import Deliverable
+from app.models.role_permission import ArtifactType
 from app.models.task import Task
 from app.models.topic import Topic
 from app.models.user import User
@@ -24,6 +26,15 @@ from app.schemas.user_story import (
 from app.services.maturity import recalculate_upwards
 
 router = APIRouter(prefix="/user-stories", tags=["user_stories"])
+
+
+async def _resolve_story_project_id(story: UserStory, db: AsyncSession) -> UUID:
+    """Resolve project_id for a user story via deliverable → topic."""
+    deliverable = await db.get(Deliverable, story.deliverable_id)
+    if deliverable.project_id:
+        return deliverable.project_id
+    topic = await db.get(Topic, deliverable.topic_id)
+    return topic.project_id
 
 
 @router.get("/", response_model=list[UserStoryResponse], summary="List user stories")
@@ -94,6 +105,9 @@ async def duplicate_user_story(
     source = await db.get(UserStory, story_id)
     if not source or source.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User story not found")
+    pid = await _resolve_story_project_id(source, db)
+    if not await check_artifact_permission(current_user, pid, ArtifactType.user_story, "create", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'create' on 'user_story'.")
 
     # Find unique title within same deliverable
     titles_res = await db.execute(
@@ -178,11 +192,14 @@ async def duplicate_user_story(
 async def get_user_story(
     story_id: UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> UserStory:
     story = await db.get(UserStory, story_id)
     if not story or story.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User story not found")
+    pid = await _resolve_story_project_id(story, db)
+    if not await check_artifact_permission(current_user, pid, ArtifactType.user_story, "read", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'read' on 'user_story'.")
     return story
 
 
@@ -195,6 +212,16 @@ async def create_user_story(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> UserStory:
+    deliverable = await db.get(Deliverable, payload.deliverable_id)
+    if not deliverable or deliverable.is_deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deliverable not found")
+    if deliverable.project_id:
+        pid = deliverable.project_id
+    else:
+        topic = await db.get(Topic, deliverable.topic_id)
+        pid = topic.project_id
+    if not await check_artifact_permission(current_user, pid, ArtifactType.user_story, "create", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'create' on 'user_story'.")
     count_res = await db.execute(
         select(func.count(UserStory.id)).where(
             UserStory.deliverable_id == payload.deliverable_id,
@@ -234,6 +261,9 @@ async def update_user_story(
     story = await db.get(UserStory, story_id)
     if not story or story.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User story not found")
+    pid = await _resolve_story_project_id(story, db)
+    if not await check_artifact_permission(current_user, pid, ArtifactType.user_story, "write", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'write' on 'user_story'.")
 
     changes: dict = {}
     status_changed = False
@@ -275,6 +305,9 @@ async def delete_user_story(
     story = await db.get(UserStory, story_id)
     if not story or story.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User story not found")
+    pid = await _resolve_story_project_id(story, db)
+    if not await check_artifact_permission(current_user, pid, ArtifactType.user_story, "delete", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'delete' on 'user_story'.")
 
     story.is_deleted = True
     story.deleted_at = datetime.now(timezone.utc)

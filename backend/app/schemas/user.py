@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
+from app.models.user import GlobalRole
+
 
 class UserBase(BaseModel):
     username: str
@@ -31,5 +33,6 @@ class UserResponse(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    global_role: GlobalRole
     created_at: datetime
     updated_at: datetime

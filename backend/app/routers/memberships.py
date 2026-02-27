@@ -17,13 +17,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.permissions import require_owner, require_viewer, get_project_role
 from app.database import get_db
 from app.models.project_membership import ProjectMembership, ProjectRole
 from app.models.user import GlobalRole, User
 from app.routers.auth import get_current_user
-from app.schemas.membership import MembershipCreate, MembershipResponse, MembershipUpdate
+from app.schemas.membership import MembershipCreate, MembershipResponse, MembershipUpdate, UserPublic
 
 router = APIRouter(
     prefix="/projects/{project_id}/members",
@@ -42,8 +43,33 @@ async def list_members(
     _: User = Depends(require_viewer),
 ) -> list[ProjectMembership]:
     result = await db.execute(
-        select(ProjectMembership).where(ProjectMembership.project_id == project_id)
+        select(ProjectMembership)
+        .where(ProjectMembership.project_id == project_id)
+        .options(selectinload(ProjectMembership.user))
     )
+    return result.scalars().all()
+
+
+@router.get(
+    "/potential",
+    response_model=list[UserPublic],
+    summary="List users not yet members of this project",
+)
+async def list_potential_members(
+    project_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_owner),
+) -> list[User]:
+    """Returns all active users who are not yet members of this project."""
+    member_result = await db.execute(
+        select(ProjectMembership.user_id).where(ProjectMembership.project_id == project_id)
+    )
+    member_ids = set(member_result.scalars().all())
+
+    stmt = select(User).where(User.is_deleted.is_(False), User.is_active.is_(True))
+    if member_ids:
+        stmt = stmt.where(User.id.not_in(member_ids))
+    result = await db.execute(stmt.order_by(User.username))
     return result.scalars().all()
 
 
@@ -84,8 +110,15 @@ async def add_member(
     )
     db.add(membership)
     await db.commit()
-    await db.refresh(membership)
-    return membership
+
+    # Re-query with eager-loaded user relation for serialization
+    result = await db.execute(
+        select(ProjectMembership)
+        .where(ProjectMembership.project_id == project_id,
+               ProjectMembership.user_id == payload.user_id)
+        .options(selectinload(ProjectMembership.user))
+    )
+    return result.scalar_one()
 
 
 @router.put(
@@ -126,8 +159,15 @@ async def update_member_role(
 
     membership.role = payload.role
     await db.commit()
-    await db.refresh(membership)
-    return membership
+
+    # Re-query with eager-loaded user relation for serialization
+    result = await db.execute(
+        select(ProjectMembership)
+        .where(ProjectMembership.project_id == project_id,
+               ProjectMembership.user_id == user_id)
+        .options(selectinload(ProjectMembership.user))
+    )
+    return result.scalar_one()
 
 
 @router.delete(

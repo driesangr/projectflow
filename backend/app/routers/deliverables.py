@@ -7,9 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.permissions import check_artifact_permission
 from app.database import get_db
 from app.models.audit_log import AuditAction, AuditLog
 from app.models.deliverable import Deliverable
+from app.models.role_permission import ArtifactType
+from app.models.topic import Topic
 from app.models.user import User
 from app.routers.auth import get_current_user
 from app.schemas.deliverable import DeliverableCreate, DeliverableMove, DeliverableResponse, DeliverableUpdate
@@ -17,6 +20,14 @@ from app.schemas.reorder import ReorderItem
 from app.services.maturity import recalculate_upwards
 
 router = APIRouter(prefix="/deliverables", tags=["deliverables"])
+
+
+async def _deliverable_project_id(d: Deliverable, db: AsyncSession) -> UUID:
+    """Resolve the project_id for a deliverable (via topic if needed)."""
+    if d.project_id:
+        return d.project_id
+    topic = await db.get(Topic, d.topic_id)
+    return topic.project_id
 
 
 @router.get("/", response_model=list[DeliverableResponse], summary="List deliverables")
@@ -55,11 +66,14 @@ async def reorder_deliverables(
 async def get_deliverable(
     deliverable_id: UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Deliverable:
     deliverable = await db.get(Deliverable, deliverable_id)
     if not deliverable or deliverable.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deliverable not found")
+    pid = await _deliverable_project_id(deliverable, db)
+    if not await check_artifact_permission(current_user, pid, ArtifactType.deliverable, "read", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'read' on 'deliverable'.")
     return deliverable
 
 
@@ -73,9 +87,14 @@ async def create_deliverable(
     current_user: User = Depends(get_current_user),
 ) -> Deliverable:
     if payload.topic_id:
+        topic = await db.get(Topic, payload.topic_id)
+        pid = topic.project_id if topic else payload.project_id
         count_filter = Deliverable.topic_id == payload.topic_id
     else:
+        pid = payload.project_id
         count_filter = Deliverable.project_id == payload.project_id
+    if not await check_artifact_permission(current_user, pid, ArtifactType.deliverable, "create", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'create' on 'deliverable'.")
     count_res = await db.execute(
         select(func.count(Deliverable.id)).where(
             count_filter,
@@ -113,6 +132,9 @@ async def update_deliverable(
     deliverable = await db.get(Deliverable, deliverable_id)
     if not deliverable or deliverable.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deliverable not found")
+    pid = await _deliverable_project_id(deliverable, db)
+    if not await check_artifact_permission(current_user, pid, ArtifactType.deliverable, "write", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'write' on 'deliverable'.")
 
     changes: dict = {}
     status_changed = False
@@ -155,6 +177,9 @@ async def duplicate_deliverable(
     source = await db.get(Deliverable, deliverable_id)
     if not source or source.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deliverable not found")
+    pid = await _deliverable_project_id(source, db)
+    if not await check_artifact_permission(current_user, pid, ArtifactType.deliverable, "create", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'create' on 'deliverable'.")
 
     # Determine parent filter for sibling queries
     if source.topic_id:
@@ -225,6 +250,9 @@ async def move_deliverable(
     deliverable = await db.get(Deliverable, deliverable_id)
     if not deliverable or deliverable.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deliverable not found")
+    pid = await _deliverable_project_id(deliverable, db)
+    if not await check_artifact_permission(current_user, pid, ArtifactType.deliverable, "write", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'write' on 'deliverable'.")
 
     old_topic_id = deliverable.topic_id
 
@@ -273,6 +301,9 @@ async def delete_deliverable(
     deliverable = await db.get(Deliverable, deliverable_id)
     if not deliverable or deliverable.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deliverable not found")
+    pid = await _deliverable_project_id(deliverable, db)
+    if not await check_artifact_permission(current_user, pid, ArtifactType.deliverable, "delete", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'delete' on 'deliverable'.")
 
     deliverable.is_deleted = True
     deliverable.deleted_at = datetime.now(timezone.utc)

@@ -7,8 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.permissions import check_artifact_permission
 from app.database import get_db
 from app.models.audit_log import AuditAction, AuditLog
+from app.models.role_permission import ArtifactType
 from app.models.topic import Topic
 from app.models.user import User
 from app.routers.auth import get_current_user
@@ -48,11 +50,13 @@ async def reorder_topics(
 async def get_topic(
     topic_id: UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Topic:
     topic = await db.get(Topic, topic_id)
     if not topic or topic.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Topic not found")
+    if not await check_artifact_permission(current_user, topic.project_id, ArtifactType.topic, "read", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'read' on 'topic'.")
     return topic
 
 
@@ -65,6 +69,8 @@ async def create_topic(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Topic:
+    if not await check_artifact_permission(current_user, payload.project_id, ArtifactType.topic, "create", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'create' on 'topic'.")
     # Assign position after existing siblings
     count_res = await db.execute(
         select(func.count(Topic.id)).where(
@@ -100,6 +106,8 @@ async def update_topic(
     topic = await db.get(Topic, topic_id)
     if not topic or topic.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Topic not found")
+    if not await check_artifact_permission(current_user, topic.project_id, ArtifactType.topic, "write", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'write' on 'topic'.")
 
     changes: dict = {}
     for field, value in payload.model_dump(exclude_unset=True).items():
@@ -132,6 +140,8 @@ async def delete_topic(
     topic = await db.get(Topic, topic_id)
     if not topic or topic.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Topic not found")
+    if not await check_artifact_permission(current_user, topic.project_id, ArtifactType.topic, "delete", db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied: 'delete' on 'topic'.")
 
     topic.is_deleted = True
     topic.deleted_at = datetime.now(timezone.utc)

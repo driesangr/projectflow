@@ -1,0 +1,290 @@
+{
+  "base_url": "http://localhost:8000",
+  "deliverables": {
+    "Granulares Rechtemanagement – Datenmodell & Backend": {
+      "id": "5fc00ae5-da82-43fb-b496-81df2a89c44f",
+      "title": "Granulares Rechtemanagement – Datenmodell & Backend",
+      "status_endpoint": "http://localhost:8000/deliverables/5fc00ae5-da82-43fb-b496-81df2a89c44f"
+    },
+    "Granulares Rechtemanagement – Admin-Oberfläche": {
+      "id": "5208a59c-8888-47d2-8e27-36ec750560e5",
+      "title": "Granulares Rechtemanagement – Admin-Oberfläche",
+      "status_endpoint": "http://localhost:8000/deliverables/5208a59c-8888-47d2-8e27-36ec750560e5"
+    },
+    "Granulares Rechtemanagement – Integration & Rollout": {
+      "id": "70c9eae1-8b7f-43f1-8c3c-ae4155dd5787",
+      "title": "Granulares Rechtemanagement – Integration & Rollout",
+      "status_endpoint": "http://localhost:8000/deliverables/70c9eae1-8b7f-43f1-8c3c-ae4155dd5787"
+    }
+  },
+  "user_stories": {
+    "A-1 | Datenmodell role_permissions anlegen": {
+      "id": "8fd3445d-0a30-497e-af37-bbc83f78a873",
+      "title": "A-1 | Datenmodell role_permissions anlegen",
+      "deliverable_id": "5fc00ae5-da82-43fb-b496-81df2a89c44f",
+      "status_endpoint": "http://localhost:8000/user-stories/8fd3445d-0a30-497e-af37-bbc83f78a873",
+      "tasks": {
+        "Task A-1.1 | Enum ArtifactType erstellen": {
+          "id": "88a6ea19-1148-440c-95b9-1c98c23d4fda",
+          "title": "Task A-1.1 | Enum ArtifactType erstellen",
+          "story_id": "8fd3445d-0a30-497e-af37-bbc83f78a873",
+          "status_endpoint": "http://localhost:8000/tasks/88a6ea19-1148-440c-95b9-1c98c23d4fda"
+        },
+        "Task A-1.2 | SQLAlchemy-Model RolePermission erstellen": {
+          "id": "45bf01a0-3bff-48f6-855a-b4cb0c1bf25d",
+          "title": "Task A-1.2 | SQLAlchemy-Model RolePermission erstellen",
+          "story_id": "8fd3445d-0a30-497e-af37-bbc83f78a873",
+          "status_endpoint": "http://localhost:8000/tasks/45bf01a0-3bff-48f6-855a-b4cb0c1bf25d"
+        },
+        "Task A-1.3 | Alembic-Migration 0008 erstellen": {
+          "id": "1f0088db-f5a8-4308-921e-8b416c9c9a92",
+          "title": "Task A-1.3 | Alembic-Migration 0008 erstellen",
+          "story_id": "8fd3445d-0a30-497e-af37-bbc83f78a873",
+          "status_endpoint": "http://localhost:8000/tasks/1f0088db-f5a8-4308-921e-8b416c9c9a92"
+        }
+      }
+    },
+    "A-2 | Vererbungslogik im Backend implementieren": {
+      "id": "2ca6bde1-55ae-4fc1-a8c7-67c546d415bb",
+      "title": "A-2 | Vererbungslogik im Backend implementieren",
+      "deliverable_id": "5fc00ae5-da82-43fb-b496-81df2a89c44f",
+      "status_endpoint": "http://localhost:8000/user-stories/2ca6bde1-55ae-4fc1-a8c7-67c546d415bb",
+      "tasks": {
+        "Task A-2.1 | Spalte is_explicit zu role_permissions hinzufügen": {
+          "id": "e5f47307-a3da-41d1-b7e3-28bb7084dbd1",
+          "title": "Task A-2.1 | Spalte is_explicit zu role_permissions hinzufügen",
+          "story_id": "2ca6bde1-55ae-4fc1-a8c7-67c546d415bb",
+          "status_endpoint": "http://localhost:8000/tasks/e5f47307-a3da-41d1-b7e3-28bb7084dbd1"
+        },
+        "Task A-2.2 | Hierarchie-Konstante und Hilfsfunktion definieren": {
+          "id": "b70d026f-d213-4d7d-998e-9a28c942ed3a",
+          "title": "Task A-2.2 | Hierarchie-Konstante und Hilfsfunktion definieren",
+          "story_id": "2ca6bde1-55ae-4fc1-a8c7-67c546d415bb",
+          "status_endpoint": "http://localhost:8000/tasks/b70d026f-d213-4d7d-998e-9a28c942ed3a"
+        },
+        "Task A-2.3 | Funktion propagate_permissions implementieren": {
+          "id": "b18a98bc-d561-4ab5-bf2d-f449d2d71dc2",
+          "title": "Task A-2.3 | Funktion propagate_permissions implementieren",
+          "story_id": "2ca6bde1-55ae-4fc1-a8c7-67c546d415bb",
+          "status_endpoint": "http://localhost:8000/tasks/b18a98bc-d561-4ab5-bf2d-f449d2d71dc2"
+        },
+        "Task A-2.4 | Unit-Tests für Propagationslogik schreiben": {
+          "id": "804153b0-5f78-4796-90fd-ab07aa69748e",
+          "title": "Task A-2.4 | Unit-Tests für Propagationslogik schreiben",
+          "story_id": "2ca6bde1-55ae-4fc1-a8c7-67c546d415bb",
+          "status_endpoint": "http://localhost:8000/tasks/804153b0-5f78-4796-90fd-ab07aa69748e"
+        }
+      }
+    },
+    "A-3 | CRUD-API für role_permissions erstellen": {
+      "id": "506035b1-c0e3-4ea8-8020-b19606ababec",
+      "title": "A-3 | CRUD-API für role_permissions erstellen",
+      "deliverable_id": "5fc00ae5-da82-43fb-b496-81df2a89c44f",
+      "status_endpoint": "http://localhost:8000/user-stories/506035b1-c0e3-4ea8-8020-b19606ababec",
+      "tasks": {
+        "Task A-3.1 | Pydantic-Schemas erstellen": {
+          "id": "40619c4e-eb33-4ca3-a3d9-a88ec9e8ee2e",
+          "title": "Task A-3.1 | Pydantic-Schemas erstellen",
+          "story_id": "506035b1-c0e3-4ea8-8020-b19606ababec",
+          "status_endpoint": "http://localhost:8000/tasks/40619c4e-eb33-4ca3-a3d9-a88ec9e8ee2e"
+        },
+        "Task A-3.2 | Router app/routers/permissions.py erstellen": {
+          "id": "f1ba034f-c247-4c01-b0bc-a196382b931d",
+          "title": "Task A-3.2 | Router app/routers/permissions.py erstellen",
+          "story_id": "506035b1-c0e3-4ea8-8020-b19606ababec",
+          "status_endpoint": "http://localhost:8000/tasks/f1ba034f-c247-4c01-b0bc-a196382b931d"
+        },
+        "Task A-3.3 | Router in main.py registrieren": {
+          "id": "10b63d94-772b-4caa-a897-c1b123e235b0",
+          "title": "Task A-3.3 | Router in main.py registrieren",
+          "story_id": "506035b1-c0e3-4ea8-8020-b19606ababec",
+          "status_endpoint": "http://localhost:8000/tasks/10b63d94-772b-4caa-a897-c1b123e235b0"
+        }
+      }
+    },
+    "A-4 | Standard-Rollenkonfiguration als Seed-Daten definieren": {
+      "id": "f4d9d6c2-7d70-4fde-a92a-cf8651e4add6",
+      "title": "A-4 | Standard-Rollenkonfiguration als Seed-Daten definieren",
+      "deliverable_id": "5fc00ae5-da82-43fb-b496-81df2a89c44f",
+      "status_endpoint": "http://localhost:8000/user-stories/f4d9d6c2-7d70-4fde-a92a-cf8651e4add6",
+      "tasks": {
+        "Task A-4.1 | Seed-Daten-Konstante definieren": {
+          "id": "ddc3623b-07ca-498c-978f-8191f690195b",
+          "title": "Task A-4.1 | Seed-Daten-Konstante definieren",
+          "story_id": "f4d9d6c2-7d70-4fde-a92a-cf8651e4add6",
+          "status_endpoint": "http://localhost:8000/tasks/ddc3623b-07ca-498c-978f-8191f690195b"
+        },
+        "Task A-4.2 | Seed-Funktion implementieren": {
+          "id": "0e622c4c-7d45-470a-af10-4022a017e454",
+          "title": "Task A-4.2 | Seed-Funktion implementieren",
+          "story_id": "f4d9d6c2-7d70-4fde-a92a-cf8651e4add6",
+          "status_endpoint": "http://localhost:8000/tasks/0e622c4c-7d45-470a-af10-4022a017e454"
+        }
+      }
+    },
+    "B-1 | TypeScript-Typen und API-Client für Permissions erweitern": {
+      "id": "fdffa20b-fccb-4f02-907a-e880af4e991b",
+      "title": "B-1 | TypeScript-Typen und API-Client für Permissions erweitern",
+      "deliverable_id": "5208a59c-8888-47d2-8e27-36ec750560e5",
+      "status_endpoint": "http://localhost:8000/user-stories/fdffa20b-fccb-4f02-907a-e880af4e991b",
+      "tasks": {
+        "Task B-1.1 | TypeScript-Typen ergänzen": {
+          "id": "6f3c20ed-1a20-4a0c-829f-91497939a514",
+          "title": "Task B-1.1 | TypeScript-Typen ergänzen",
+          "story_id": "fdffa20b-fccb-4f02-907a-e880af4e991b",
+          "status_endpoint": "http://localhost:8000/tasks/6f3c20ed-1a20-4a0c-829f-91497939a514"
+        },
+        "Task B-1.2 | API-Modul permissions.ts erstellen": {
+          "id": "add6da37-112b-4ff3-a6f4-436ba9257015",
+          "title": "Task B-1.2 | API-Modul permissions.ts erstellen",
+          "story_id": "fdffa20b-fccb-4f02-907a-e880af4e991b",
+          "status_endpoint": "http://localhost:8000/tasks/add6da37-112b-4ff3-a6f4-436ba9257015"
+        }
+      }
+    },
+    "B-2 | Permissions-Store (Pinia) implementieren": {
+      "id": "938f2783-57ca-4b5d-9df4-10428f0f2dfa",
+      "title": "B-2 | Permissions-Store (Pinia) implementieren",
+      "deliverable_id": "5208a59c-8888-47d2-8e27-36ec750560e5",
+      "status_endpoint": "http://localhost:8000/user-stories/938f2783-57ca-4b5d-9df4-10428f0f2dfa",
+      "tasks": {
+        "Task B-2.1 | Pinia-Store Grundstruktur erstellen": {
+          "id": "c6eddbc4-3195-4150-a3a2-0b98157db86c",
+          "title": "Task B-2.1 | Pinia-Store Grundstruktur erstellen",
+          "story_id": "938f2783-57ca-4b5d-9df4-10428f0f2dfa",
+          "status_endpoint": "http://localhost:8000/tasks/c6eddbc4-3195-4150-a3a2-0b98157db86c"
+        },
+        "Task B-2.2 | Actions implementieren": {
+          "id": "0790b9f9-a31a-47c8-b417-dcae277e095c",
+          "title": "Task B-2.2 | Actions implementieren",
+          "story_id": "938f2783-57ca-4b5d-9df4-10428f0f2dfa",
+          "status_endpoint": "http://localhost:8000/tasks/0790b9f9-a31a-47c8-b417-dcae277e095c"
+        },
+        "Task B-2.3 | Getter implementieren": {
+          "id": "a3a829ca-3de7-4264-861d-f70b22e4def4",
+          "title": "Task B-2.3 | Getter implementieren",
+          "story_id": "938f2783-57ca-4b5d-9df4-10428f0f2dfa",
+          "status_endpoint": "http://localhost:8000/tasks/a3a829ca-3de7-4264-861d-f70b22e4def4"
+        }
+      }
+    },
+    "B-3 | PermissionsTreeNode-Komponente erstellen": {
+      "id": "524cbf54-2106-4acf-8716-50cc04cadbe9",
+      "title": "B-3 | PermissionsTreeNode-Komponente erstellen",
+      "deliverable_id": "5208a59c-8888-47d2-8e27-36ec750560e5",
+      "status_endpoint": "http://localhost:8000/user-stories/524cbf54-2106-4acf-8716-50cc04cadbe9",
+      "tasks": {
+        "Task B-3.1 | Komponenten-Grundstruktur und Props": {
+          "id": "fd2e29f4-fe34-468b-9a82-44b00fc5266e",
+          "title": "Task B-3.1 | Komponenten-Grundstruktur und Props",
+          "story_id": "524cbf54-2106-4acf-8716-50cc04cadbe9",
+          "status_endpoint": "http://localhost:8000/tasks/fd2e29f4-fe34-468b-9a82-44b00fc5266e"
+        },
+        "Task B-3.2 | Template mit Checkboxen und Status-Indikator": {
+          "id": "8205a386-1b47-41d1-aab6-68c4c980cfca",
+          "title": "Task B-3.2 | Template mit Checkboxen und Status-Indikator",
+          "story_id": "524cbf54-2106-4acf-8716-50cc04cadbe9",
+          "status_endpoint": "http://localhost:8000/tasks/8205a386-1b47-41d1-aab6-68c4c980cfca"
+        },
+        "Task B-3.3 | Event-Handler und Speicherlogik": {
+          "id": "6447f2ef-8976-4bae-8504-ebd4e02f2ffd",
+          "title": "Task B-3.3 | Event-Handler und Speicherlogik",
+          "story_id": "524cbf54-2106-4acf-8716-50cc04cadbe9",
+          "status_endpoint": "http://localhost:8000/tasks/6447f2ef-8976-4bae-8504-ebd4e02f2ffd"
+        }
+      }
+    },
+    "B-4 | ConfigPermissionsView erstellen und in Navigation einbinden": {
+      "id": "8253cff3-321b-4f17-9f1c-04ff0a339064",
+      "title": "B-4 | ConfigPermissionsView erstellen und in Navigation einbinden",
+      "deliverable_id": "5208a59c-8888-47d2-8e27-36ec750560e5",
+      "status_endpoint": "http://localhost:8000/user-stories/8253cff3-321b-4f17-9f1c-04ff0a339064",
+      "tasks": {
+        "Task B-4.1 | ConfigPermissionsView Grundstruktur": {
+          "id": "20a55e23-c454-44cf-bcbf-1aaf3972a621",
+          "title": "Task B-4.1 | ConfigPermissionsView Grundstruktur",
+          "story_id": "8253cff3-321b-4f17-9f1c-04ff0a339064",
+          "status_endpoint": "http://localhost:8000/tasks/20a55e23-c454-44cf-bcbf-1aaf3972a621"
+        },
+        "Task B-4.2 | Template mit Rollen-Selector und Baum": {
+          "id": "771d40c3-2ffd-4134-8ae0-7af4f5e2a572",
+          "title": "Task B-4.2 | Template mit Rollen-Selector und Baum",
+          "story_id": "8253cff3-321b-4f17-9f1c-04ff0a339064",
+          "status_endpoint": "http://localhost:8000/tasks/771d40c3-2ffd-4134-8ae0-7af4f5e2a572"
+        },
+        "Task B-4.3 | Route und Sidebar-Integration": {
+          "id": "5476ef80-01b0-440b-acde-b2dfc60679da",
+          "title": "Task B-4.3 | Route und Sidebar-Integration",
+          "story_id": "8253cff3-321b-4f17-9f1c-04ff0a339064",
+          "status_endpoint": "http://localhost:8000/tasks/5476ef80-01b0-440b-acde-b2dfc60679da"
+        }
+      }
+    },
+    "C-1 | Permissions-Engine auf artefaktbasierte Prüfung erweitern": {
+      "id": "a75d459c-bdb6-46a3-be01-d25fdc286953",
+      "title": "C-1 | Permissions-Engine auf artefaktbasierte Prüfung erweitern",
+      "deliverable_id": "70c9eae1-8b7f-43f1-8c3c-ae4155dd5787",
+      "status_endpoint": "http://localhost:8000/user-stories/a75d459c-bdb6-46a3-be01-d25fdc286953",
+      "tasks": {
+        "Task C-1.1 | check_artifact_permission implementieren": {
+          "id": "8a9f8d64-c30b-4fe1-b216-7fdec66de4e6",
+          "title": "Task C-1.1 | check_artifact_permission implementieren",
+          "story_id": "a75d459c-bdb6-46a3-be01-d25fdc286953",
+          "status_endpoint": "http://localhost:8000/tasks/8a9f8d64-c30b-4fe1-b216-7fdec66de4e6"
+        },
+        "Task C-1.2 | require_artifact_permission Dependency-Factory erstellen": {
+          "id": "e47aba44-3bad-4ff7-9aad-91e0fa95a080",
+          "title": "Task C-1.2 | require_artifact_permission Dependency-Factory erstellen",
+          "story_id": "a75d459c-bdb6-46a3-be01-d25fdc286953",
+          "status_endpoint": "http://localhost:8000/tasks/e47aba44-3bad-4ff7-9aad-91e0fa95a080"
+        }
+      }
+    },
+    "C-2 | Bestehende Router mit granularen Guards absichern": {
+      "id": "e14eb807-0973-4a38-8d91-76986ff5b7be",
+      "title": "C-2 | Bestehende Router mit granularen Guards absichern",
+      "deliverable_id": "70c9eae1-8b7f-43f1-8c3c-ae4155dd5787",
+      "status_endpoint": "http://localhost:8000/user-stories/e14eb807-0973-4a38-8d91-76986ff5b7be",
+      "tasks": {
+        "Task C-2.1 | Router topics.py aktualisieren": {
+          "id": "c1621d28-0da4-4d8f-be5c-34a738f51374",
+          "title": "Task C-2.1 | Router topics.py aktualisieren",
+          "story_id": "e14eb807-0973-4a38-8d91-76986ff5b7be",
+          "status_endpoint": "http://localhost:8000/tasks/c1621d28-0da4-4d8f-be5c-34a738f51374"
+        },
+        "Task C-2.2 | Router deliverables.py aktualisieren": {
+          "id": "4cf74876-7a74-4177-94ad-0da4ca581e48",
+          "title": "Task C-2.2 | Router deliverables.py aktualisieren",
+          "story_id": "e14eb807-0973-4a38-8d91-76986ff5b7be",
+          "status_endpoint": "http://localhost:8000/tasks/4cf74876-7a74-4177-94ad-0da4ca581e48"
+        },
+        "Task C-2.3 | Router user_stories.py und tasks.py aktualisieren": {
+          "id": "14e3a705-3bdd-4acf-803b-2b5b0ece2f0e",
+          "title": "Task C-2.3 | Router user_stories.py und tasks.py aktualisieren",
+          "story_id": "e14eb807-0973-4a38-8d91-76986ff5b7be",
+          "status_endpoint": "http://localhost:8000/tasks/14e3a705-3bdd-4acf-803b-2b5b0ece2f0e"
+        },
+        "Task C-2.4 | Router projects.py und project_groups.py aktualisieren": {
+          "id": "0b502092-5c20-4bd1-91e5-5a7d61dbdb24",
+          "title": "Task C-2.4 | Router projects.py und project_groups.py aktualisieren",
+          "story_id": "e14eb807-0973-4a38-8d91-76986ff5b7be",
+          "status_endpoint": "http://localhost:8000/tasks/0b502092-5c20-4bd1-91e5-5a7d61dbdb24"
+        }
+      }
+    },
+    "C-3 | Idempotentes Setup-Script für Produktion erstellen": {
+      "id": "d7e064cd-ec6d-441d-9a9b-5730aead97b0",
+      "title": "C-3 | Idempotentes Setup-Script für Produktion erstellen",
+      "deliverable_id": "70c9eae1-8b7f-43f1-8c3c-ae4155dd5787",
+      "status_endpoint": "http://localhost:8000/user-stories/d7e064cd-ec6d-441d-9a9b-5730aead97b0",
+      "tasks": {
+        "Task C-3.1 | Setup-Script setup_granulares_rechtemanagement_apply.py erstellen": {
+          "id": "02c2d386-1e07-4586-96c7-c24c0ba32738",
+          "title": "Task C-3.1 | Setup-Script setup_granulares_rechtemanagement_apply.py erstellen",
+          "story_id": "d7e064cd-ec6d-441d-9a9b-5730aead97b0",
+          "status_endpoint": "http://localhost:8000/tasks/02c2d386-1e07-4586-96c7-c24c0ba32738"
+        }
+      }
+    }
+  }
+}

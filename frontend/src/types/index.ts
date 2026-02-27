@@ -30,13 +30,62 @@ export interface ProjectGroup {
   updated_at: string
 }
 
+export type GlobalRole = 'superuser' | 'admin' | 'user'
+export type ProjectRole = 'owner' | 'manager' | 'member' | 'viewer'
+
 export interface User {
   id: string
   username: string
   email: string
+  full_name: string | null
   is_active: boolean
+  is_admin: boolean
+  global_role: GlobalRole
   created_at: string
   updated_at: string
+}
+
+export type UserResponse = User
+
+export interface UserCreate {
+  username: string
+  email: string
+  password: string
+  full_name?: string | null
+  global_role?: GlobalRole
+}
+
+export interface UserUpdate {
+  email?: string | null
+  full_name?: string | null
+  is_active?: boolean | null
+  global_role?: GlobalRole | null
+  password?: string | null
+}
+
+export interface UserPublic {
+  id: string
+  username: string
+  full_name: string | null
+  email: string
+}
+
+export interface MembershipResponse {
+  id: string
+  project_id: string
+  role: ProjectRole
+  created_at: string
+  updated_at: string
+  user: UserPublic
+}
+
+export interface MembershipCreate {
+  user_id: string
+  role: ProjectRole
+}
+
+export interface MembershipUpdate {
+  role: ProjectRole
 }
 
 export interface Project {
@@ -149,6 +198,48 @@ export interface Sprint {
   project_id: string
   created_at: string
   updated_at: string
+}
+
+// ── Permissions ──────────────────────────────────────────────────────────────
+
+export type ArtifactType =
+  | 'project_group'
+  | 'project'
+  | 'topic'
+  | 'deliverable'
+  | 'user_story'
+  | 'task'
+
+export interface RolePermission {
+  id: string
+  project_role: ProjectRole
+  artifact_type: ArtifactType
+  can_read: boolean
+  can_write: boolean
+  can_create: boolean
+  can_delete: boolean
+  inherit_to_children: boolean
+  is_explicit: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface RolePermissionCreate {
+  project_role: ProjectRole
+  artifact_type: ArtifactType
+  can_read?: boolean
+  can_write?: boolean
+  can_create?: boolean
+  can_delete?: boolean
+  inherit_to_children?: boolean
+}
+
+export interface RolePermissionUpdate {
+  can_read?: boolean
+  can_write?: boolean
+  can_create?: boolean
+  can_delete?: boolean
+  inherit_to_children?: boolean
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────────

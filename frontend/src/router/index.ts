@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import type { GlobalRole } from '@/types'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -69,6 +70,27 @@ const router = createRouter({
       name: 'task-detail',
       component: () => import('@/views/TaskDetailView.vue'),
     },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('@/views/ProfileView.vue'),
+    },
+    {
+      path: '/config',
+      redirect: '/config/users',
+    },
+    {
+      path: '/config/users',
+      name: 'config-users',
+      component: () => import('@/views/ConfigUsersView.vue'),
+      meta: { requiresAdmin: true },
+    },
+    {
+      path: '/config/permissions',
+      name: 'config-permissions',
+      component: () => import('@/views/ConfigPermissionsView.vue'),
+      meta: { requiresAdmin: true },
+    },
   ],
 })
 
@@ -87,6 +109,14 @@ router.beforeEach(async (to) => {
     // fetchMe() calls logout() internally on failure, clearing the token
     if (!auth.isAuthenticated) {
       return { name: 'login' }
+    }
+  }
+
+  // Admin-Guard: /config/* nur für admin und superuser
+  if (to.meta.requiresAdmin) {
+    const role = auth.user?.global_role as GlobalRole | undefined
+    if (role !== 'admin' && role !== 'superuser') {
+      return { name: 'project-groups' }
     }
   }
 
