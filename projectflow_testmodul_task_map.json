@@ -1,0 +1,193 @@
+{
+  "base_url": "http://localhost:8000",
+  "topic_id": "3a4d2c03-124f-42b1-8891-06078c8447be",
+  "project_id": "16ba9238-a469-4c52-93fd-b21686a2587f",
+  "deliverables": {
+    "D1 | Testframework-Basis": {
+      "id": "45c66486-6320-463e-9108-0bd34d96f83e",
+      "status_endpoint": "http://localhost:8000/deliverables/45c66486-6320-463e-9108-0bd34d96f83e"
+    },
+    "D2 | Testszenarien: Topics": {
+      "id": "4675a2c2-6d16-4d9f-92fa-7fc2335a4987",
+      "status_endpoint": "http://localhost:8000/deliverables/4675a2c2-6d16-4d9f-92fa-7fc2335a4987"
+    },
+    "D3 | Testszenarien: Deliverables": {
+      "id": "afaf177b-3f38-42c2-8fad-491f17f7e87b",
+      "status_endpoint": "http://localhost:8000/deliverables/afaf177b-3f38-42c2-8fad-491f17f7e87b"
+    },
+    "D4 | Testszenarien: User Stories": {
+      "id": "6bb33531-64f3-4495-bffd-b6f5811c6575",
+      "status_endpoint": "http://localhost:8000/deliverables/6bb33531-64f3-4495-bffd-b6f5811c6575"
+    },
+    "D5 | Testszenarien: Tasks": {
+      "id": "d00b4ac8-6ec6-4fc0-a04f-39a47d07cf04",
+      "status_endpoint": "http://localhost:8000/deliverables/d00b4ac8-6ec6-4fc0-a04f-39a47d07cf04"
+    },
+    "D6 | CI-Integration und Dokumentation": {
+      "id": "87827010-4883-47f0-9884-2c36d64f0342",
+      "status_endpoint": "http://localhost:8000/deliverables/87827010-4883-47f0-9884-2c36d64f0342"
+    }
+  },
+  "user_stories": {
+    "TF-1 | Projektstruktur und Abhängigkeiten": {
+      "id": "217af163-3871-4222-969c-394a8a91bc83",
+      "deliverable_id": "45c66486-6320-463e-9108-0bd34d96f83e",
+      "status_endpoint": "http://localhost:8000/user-stories/217af163-3871-4222-969c-394a8a91bc83",
+      "tasks": {
+        "Task TF-1.1 | Verzeichnisstruktur anlegen": {
+          "id": "2d4062f7-a6af-42b0-a325-1f6f01c17e49",
+          "status_endpoint": "http://localhost:8000/tasks/2d4062f7-a6af-42b0-a325-1f6f01c17e49"
+        },
+        "Task TF-1.2 | pytest.ini und requirements-test.txt erstellen": {
+          "id": "57ff4b6e-68e7-4294-bee1-77502b971a16",
+          "status_endpoint": "http://localhost:8000/tasks/57ff4b6e-68e7-4294-bee1-77502b971a16"
+        }
+      }
+    },
+    "TF-2 | Auth-Fixture und HTTP-Client": {
+      "id": "3709485a-6e53-4006-8fa5-38ecc9a0d7b8",
+      "deliverable_id": "45c66486-6320-463e-9108-0bd34d96f83e",
+      "status_endpoint": "http://localhost:8000/user-stories/3709485a-6e53-4006-8fa5-38ecc9a0d7b8",
+      "tasks": {
+        "Task TF-2.1 | auth_client-Fixture in conftest.py implementieren": {
+          "id": "ba828c07-840e-4261-9a84-506ee3db3296",
+          "status_endpoint": "http://localhost:8000/tasks/ba828c07-840e-4261-9a84-506ee3db3296"
+        },
+        "Task TF-2.2 | API-Client Hilfsklasse erstellen (utils/api_client.py)": {
+          "id": "b57ad1ed-ee62-4e38-8e20-c37ecdfdfed2",
+          "status_endpoint": "http://localhost:8000/tasks/b57ad1ed-ee62-4e38-8e20-c37ecdfdfed2"
+        }
+      }
+    },
+    "TF-3 | Cleanup-Fixture für Test-Isolation": {
+      "id": "be7ec238-1490-412c-a924-69b80be3b9fb",
+      "deliverable_id": "45c66486-6320-463e-9108-0bd34d96f83e",
+      "status_endpoint": "http://localhost:8000/user-stories/be7ec238-1490-412c-a924-69b80be3b9fb",
+      "tasks": {
+        "Task TF-3.1 | cleanup_ids-Fixture und CleanupRegistry implementieren": {
+          "id": "09a57c57-f71b-4be8-870a-507b16737025",
+          "status_endpoint": "http://localhost:8000/tasks/09a57c57-f71b-4be8-870a-507b16737025"
+        }
+      }
+    },
+    "TS-T1 | Topic erstellen (Happy Path + Fehlerfälle)": {
+      "id": "336b7ea8-888b-40c8-8f8e-5cfe24ebd092",
+      "deliverable_id": "4675a2c2-6d16-4d9f-92fa-7fc2335a4987",
+      "status_endpoint": "http://localhost:8000/user-stories/336b7ea8-888b-40c8-8f8e-5cfe24ebd092",
+      "tasks": {
+        "Task TS-T1.1 | test_create_topic_success implementieren": {
+          "id": "f0c7d3c7-2bd9-4a67-9e45-57ffcfff65bd",
+          "status_endpoint": "http://localhost:8000/tasks/f0c7d3c7-2bd9-4a67-9e45-57ffcfff65bd"
+        },
+        "Task TS-T1.2 | test_create_topic_missing_title und test_create_topic_invalid_project implementieren": {
+          "id": "e44790de-3e1b-49ef-ac92-3a4d2ccd1d99",
+          "status_endpoint": "http://localhost:8000/tasks/e44790de-3e1b-49ef-ac92-3a4d2ccd1d99"
+        }
+      }
+    },
+    "TS-T2 | Topic lesen und aktualisieren": {
+      "id": "7ff012c3-7dea-42b8-bbac-6eb7db38313e",
+      "deliverable_id": "4675a2c2-6d16-4d9f-92fa-7fc2335a4987",
+      "status_endpoint": "http://localhost:8000/user-stories/7ff012c3-7dea-42b8-bbac-6eb7db38313e",
+      "tasks": {
+        "Task TS-T2.1 | test_get_topic und test_update_topic implementieren": {
+          "id": "72be3244-34c9-404f-9fa6-b248773a9f19",
+          "status_endpoint": "http://localhost:8000/tasks/72be3244-34c9-404f-9fa6-b248773a9f19"
+        },
+        "Task TS-T2.2 | test_get_topic_not_found implementieren": {
+          "id": "a8865c11-bee7-4432-b938-5bdfa6c91787",
+          "status_endpoint": "http://localhost:8000/tasks/a8865c11-bee7-4432-b938-5bdfa6c91787"
+        }
+      }
+    },
+    "TS-T3 | Topic löschen (Soft-Delete)": {
+      "id": "d013cebc-3471-4271-9914-4e7fccba020d",
+      "deliverable_id": "4675a2c2-6d16-4d9f-92fa-7fc2335a4987",
+      "status_endpoint": "http://localhost:8000/user-stories/d013cebc-3471-4271-9914-4e7fccba020d",
+      "tasks": {
+        "Task TS-T3.1 | test_delete_topic und test_deleted_topic_not_found implementieren": {
+          "id": "03ff9a0a-24df-44f1-8772-a2a4ca1dc127",
+          "status_endpoint": "http://localhost:8000/tasks/03ff9a0a-24df-44f1-8772-a2a4ca1dc127"
+        }
+      }
+    },
+    "TS-D1 | Deliverable erstellen und lesen": {
+      "id": "76e019e3-70e6-42e8-9a44-b4d269f2d108",
+      "deliverable_id": "afaf177b-3f38-42c2-8fad-491f17f7e87b",
+      "status_endpoint": "http://localhost:8000/user-stories/76e019e3-70e6-42e8-9a44-b4d269f2d108",
+      "tasks": {
+        "Task TS-D1.1 | test_create_deliverable und test_list_deliverables_by_topic": {
+          "id": "21f09c12-783b-4a43-b4e5-790c3babe9e8",
+          "status_endpoint": "http://localhost:8000/tasks/21f09c12-783b-4a43-b4e5-790c3babe9e8"
+        },
+        "Task TS-D1.2 | test_create_deliverable_missing_topic_id": {
+          "id": "7fb08045-cf22-46c3-87d7-39973a9ceea6",
+          "status_endpoint": "http://localhost:8000/tasks/7fb08045-cf22-46c3-87d7-39973a9ceea6"
+        }
+      }
+    },
+    "TS-D2 | Deliverable aktualisieren und löschen": {
+      "id": "3411b12a-bab9-44d9-bf35-3fd6d13272a4",
+      "deliverable_id": "afaf177b-3f38-42c2-8fad-491f17f7e87b",
+      "status_endpoint": "http://localhost:8000/user-stories/3411b12a-bab9-44d9-bf35-3fd6d13272a4",
+      "tasks": {
+        "Task TS-D2.1 | test_update_deliverable, test_delete_deliverable, test_update_nonexistent": {
+          "id": "9f683dee-a492-47c4-9d5e-841e7be4fd70",
+          "status_endpoint": "http://localhost:8000/tasks/9f683dee-a492-47c4-9d5e-841e7be4fd70"
+        }
+      }
+    },
+    "TS-US1 | User Story erstellen und Status ändern": {
+      "id": "cfb7c5f3-b1f6-40a8-bf9a-af9cd4cb4c8a",
+      "deliverable_id": "6bb33531-64f3-4495-bffd-b6f5811c6575",
+      "status_endpoint": "http://localhost:8000/user-stories/cfb7c5f3-b1f6-40a8-bf9a-af9cd4cb4c8a",
+      "tasks": {
+        "Task TS-US1.1 | User Story CRUD und Status-Flow implementieren": {
+          "id": "c80844b2-6095-4bf9-bbb1-916072d4a6cf",
+          "status_endpoint": "http://localhost:8000/tasks/c80844b2-6095-4bf9-bbb1-916072d4a6cf"
+        },
+        "Task TS-US1.2 | test_create_user_story_invalid_status": {
+          "id": "9108146e-9e0c-45ba-a151-c2d88d0a8077",
+          "status_endpoint": "http://localhost:8000/tasks/9108146e-9e0c-45ba-a151-c2d88d0a8077"
+        }
+      }
+    },
+    "TS-TK1 | Task erstellen, Status ändern und löschen": {
+      "id": "d61979b6-6963-484d-8853-a1bb44583991",
+      "deliverable_id": "d00b4ac8-6ec6-4fc0-a04f-39a47d07cf04",
+      "status_endpoint": "http://localhost:8000/user-stories/d61979b6-6963-484d-8853-a1bb44583991",
+      "tasks": {
+        "Task TS-TK1.1 | test_create_task und test_task_status_transition": {
+          "id": "aec03510-7e79-4e9f-8bda-664a58aaf661",
+          "status_endpoint": "http://localhost:8000/tasks/aec03510-7e79-4e9f-8bda-664a58aaf661"
+        },
+        "Task TS-TK1.2 | test_delete_task implementieren": {
+          "id": "5d63a541-bb7e-4d1e-bd3a-4c3ace7e21ff",
+          "status_endpoint": "http://localhost:8000/tasks/5d63a541-bb7e-4d1e-bd3a-4c3ace7e21ff"
+        }
+      }
+    },
+    "TF-CI1 | README_TESTS.md erstellen": {
+      "id": "7c5decea-07f9-4e33-86d5-98bce5516d7f",
+      "deliverable_id": "87827010-4883-47f0-9884-2c36d64f0342",
+      "status_endpoint": "http://localhost:8000/user-stories/7c5decea-07f9-4e33-86d5-98bce5516d7f",
+      "tasks": {
+        "Task TF-CI1.1 | README_TESTS.md schreiben": {
+          "id": "d428388f-fdd0-48fe-875d-814f5bbe4c69",
+          "status_endpoint": "http://localhost:8000/tasks/d428388f-fdd0-48fe-875d-814f5bbe4c69"
+        }
+      }
+    },
+    "TF-CI2 | GitHub Actions Workflow": {
+      "id": "3dd409e8-c15e-4fa1-a1e5-13d529fabeb5",
+      "deliverable_id": "87827010-4883-47f0-9884-2c36d64f0342",
+      "status_endpoint": "http://localhost:8000/user-stories/3dd409e8-c15e-4fa1-a1e5-13d529fabeb5",
+      "tasks": {
+        "Task TF-CI2.1 | .github/workflows/tests.yml erstellen": {
+          "id": "077e663c-bf01-464c-bbeb-06770aa278ad",
+          "status_endpoint": "http://localhost:8000/tasks/077e663c-bf01-464c-bbeb-06770aa278ad"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,85 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: projectflow
+          POSTGRES_PASSWORD: projectflow
+          POSTGRES_DB: projectflow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Run Alembic migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://projectflow:projectflow@localhost:5432/projectflow
+          SECRET_KEY: ci-test-secret-key
+        run: alembic upgrade head
+
+      - name: Start backend server
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://projectflow:projectflow@localhost:5432/projectflow
+          SECRET_KEY: ci-test-secret-key
+        run: |
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          echo "Waiting for server to start..."
+          sleep 5
+
+      - name: Seed initial admin user
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://projectflow:projectflow@localhost:5432/projectflow
+          SECRET_KEY: ci-test-secret-key
+        run: |
+          python3 -c "
+          import asyncio, asyncpg, hashlib
+          from passlib.context import CryptContext
+          pwd_ctx = CryptContext(schemes=['bcrypt'], deprecated='auto')
+          hashed = pwd_ctx.hash('admin123')
+          async def main():
+              conn = await asyncpg.connect('postgresql://projectflow:projectflow@localhost:5432/projectflow')
+              await conn.execute(
+                  \"INSERT INTO users (id, username, email, hashed_password, is_active, is_superuser) VALUES (gen_random_uuid(), 'admin', 'admin@example.com', \$1, true, true) ON CONFLICT DO NOTHING\",
+                  hashed
+              )
+              await conn.close()
+          asyncio.run(main())
+          "
+
+      - name: Install test dependencies
+        working-directory: tests
+        run: pip install -r requirements-test.txt
+
+      - name: Run integration tests
+        working-directory: tests
+        run: python -m pytest -v --tb=short

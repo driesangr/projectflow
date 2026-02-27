@@ -1,0 +1,4 @@
+# Integration test dependencies
+httpx==0.27.2
+pytest==9.0.2
+pytest-asyncio==1.3.0
