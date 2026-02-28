@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Flow – Benutzerhandbuch</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:       #4f46e5;
+      --brand-light: #eef2ff;
+      --brand-dark:  #3730a3;
+      --sidebar-bg:  #1e1b4b;
+      --sidebar-txt: #c7d2fe;
+      --accent:      #06b6d4;
+      --success:     #10b981;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --gray-50:     #f9fafb;
+      --gray-100:    #f3f4f6;
+      --gray-200:    #e5e7eb;
+      --gray-300:    #d1d5db;
+      --gray-600:    #4b5563;
+      --gray-700:    #374151;
+      --gray-900:    #111827;
+      --text:        #1f2937;
+      --radius:      8px;
+      --shadow:      0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md:   0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 260px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-txt);
+      padding: 0;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: 2px 0 8px rgba(0,0,0,.3);
+    }
+
+    #sidebar .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+    #sidebar .logo svg { flex-shrink: 0; }
+
+    #sidebar nav { padding: 12px 0 24px; }
+
+    #sidebar nav a {
+      display: block;
+      padding: 7px 20px;
+      color: var(--sidebar-txt);
+      text-decoration: none;
+      font-size: .875rem;
+      border-left: 3px solid transparent;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    #sidebar nav a:hover {
+      background: rgba(255,255,255,.06);
+      color: #fff;
+    }
+    #sidebar nav a.active {
+      background: rgba(99,102,241,.25);
+      border-left-color: var(--brand);
+      color: #fff;
+    }
+
+    #sidebar nav .nav-section {
+      padding: 14px 20px 4px;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(199,210,254,.4);
+    }
+
+    /* ── Main Content ── */
+    #content {
+      margin-left: 260px;
+      flex: 1;
+      padding: 0;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 50%, var(--accent) 100%);
+      color: #fff;
+      padding: 56px 64px 48px;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -.5px;
+      margin-bottom: 12px;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      opacity: .88;
+      max-width: 620px;
+      line-height: 1.6;
+    }
+    .hero .version {
+      display: inline-block;
+      margin-top: 20px;
+      background: rgba(255,255,255,.18);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: .8rem;
+      font-weight: 600;
+    }
+
+    /* ── Article layout ── */
+    article {
+      padding: 48px 64px;
+      max-width: 900px;
+    }
+
+    /* ── Headings ── */
+    h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--brand-dark);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--gray-200);
+      scroll-margin-top: 24px;
+    }
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin: 28px 0 10px;
+      scroll-margin-top: 24px;
+    }
+    h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gray-700);
+      margin: 20px 0 8px;
+    }
+
+    p { margin-bottom: 14px; }
+
+    /* ── Section separator ── */
+    section { margin-bottom: 64px; }
+
+    /* ── Hierarchy diagram ── */
+    .hierarchy {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin: 20px 0 28px;
+      font-family: "Courier New", monospace;
+      font-size: .875rem;
+      line-height: 1.9;
+      color: var(--gray-700);
+    }
+    .hierarchy .lvl0 { color: var(--brand-dark); font-weight: 700; }
+    .hierarchy .lvl1 { color: #0f766e; }
+    .hierarchy .lvl2 { color: #0369a1; }
+    .hierarchy .lvl3 { color: #6d28d9; }
+    .hierarchy .lvl4 { color: #b45309; }
+    .hierarchy .lvl5 { color: #b91c1c; }
+
+    /* ── Info / tip / warning boxes ── */
+    .box {
+      border-left: 4px solid;
+      padding: 14px 18px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      margin: 20px 0;
+      font-size: .925rem;
+    }
+    .box.tip    { border-color: var(--success); background: #f0fdf4; }
+    .box.info   { border-color: var(--brand);   background: var(--brand-light); }
+    .box.warn   { border-color: var(--warning);  background: #fffbeb; }
+    .box strong { display: block; margin-bottom: 4px; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; }
+    .box.tip  strong { color: #065f46; }
+    .box.info strong { color: var(--brand-dark); }
+    .box.warn strong { color: #92400e; }
+
+    /* ── Badge chips ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 12px;
+      font-size: .775rem;
+      font-weight: 600;
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+    .badge.todo     { background: var(--gray-100); color: var(--gray-600); }
+    .badge.progress { background: #dbeafe; color: #1e40af; }
+    .badge.done     { background: #d1fae5; color: #065f46; }
+    .badge.hold     { background: #fef9c3; color: #854d0e; }
+    .badge.owner    { background: #ede9fe; color: #5b21b6; }
+    .badge.manager  { background: #dbeafe; color: #1e40af; }
+    .badge.member   { background: #d1fae5; color: #065f46; }
+    .badge.viewer   { background: var(--gray-100); color: var(--gray-600); }
+    .badge.role-admin      { background: #fee2e2; color: #991b1b; }
+    .badge.role-superuser  { background: #fce7f3; color: #9d174d; }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: .9rem;
+    }
+    thead th {
+      background: var(--brand-dark);
+      color: #fff;
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 600;
+    }
+    tbody tr:nth-child(even) { background: var(--gray-50); }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid var(--gray-200); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* ── Step list ── */
+    .steps { list-style: none; counter-reset: step; margin: 16px 0; }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      font-size: .8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    /* ── Feature grid ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .feature-card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .feature-card .icon {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    .feature-card h4 {
+      margin: 0 0 6px;
+      font-size: .95rem;
+    }
+    .feature-card p {
+      font-size: .85rem;
+      color: var(--gray-600);
+      margin: 0;
+    }
+
+    /* ── Kanban preview ── */
+    .kanban-preview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 16px 0 24px;
+    }
+    .kanban-col {
+      background: var(--gray-100);
+      border-radius: var(--radius);
+      padding: 10px;
+    }
+    .kanban-col-header {
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid;
+    }
+    .kanban-col.todo    .kanban-col-header { color: var(--gray-600);  border-color: var(--gray-300); }
+    .kanban-col.progress .kanban-col-header { color: #1e40af; border-color: #93c5fd; }
+    .kanban-col.done    .kanban-col-header { color: #065f46; border-color: #6ee7b7; }
+    .kanban-col.hold    .kanban-col-header { color: #854d0e; border-color: #fde68a; }
+    .kanban-card {
+      background: #fff;
+      border-radius: 5px;
+      padding: 8px 10px;
+      font-size: .8rem;
+      margin-bottom: 6px;
+      box-shadow: var(--shadow);
+      border-left: 3px solid;
+    }
+    .kanban-col.todo     .kanban-card { border-color: var(--gray-300); }
+    .kanban-col.progress .kanban-card { border-color: #60a5fa; }
+    .kanban-col.done     .kanban-card { border-color: #34d399; }
+    .kanban-col.hold     .kanban-card { border-color: #fcd34d; }
+    .kanban-card .sp { float: right; color: var(--gray-600); font-weight: 600; }
+
+    /* ── Perm matrix ── */
+    .perm-table td:first-child { font-weight: 600; }
+    .perm-table td { text-align: center; }
+    .perm-table td:first-child { text-align: left; }
+    .check  { color: var(--success); font-size: 1.1rem; }
+    .cross  { color: var(--gray-300); font-size: 1.1rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 860px) {
+      #sidebar { display: none; }
+      #content { margin-left: 0; }
+      article { padding: 28px 20px; }
+      .hero   { padding: 36px 20px 28px; }
+      .hero h1 { font-size: 1.8rem; }
+      .kanban-preview { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ── Print ── */
+    @media print {
+      #sidebar { display: none; }
+      #content { margin-left: 0; }
+      article  { padding: 0; max-width: 100%; }
+      .hero    { color: #000; background: #fff; padding: 0 0 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════ SIDEBAR -->
+<aside id="sidebar">
+  <div class="logo">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    Project Flow
+  </div>
+  <nav>
+    <span class="nav-section">Einstieg</span>
+    <a href="#intro">Was ist Project Flow?</a>
+    <a href="#login">Anmelden</a>
+    <a href="#navigation">Navigation</a>
+
+    <span class="nav-section">Kernkonzepte</span>
+    <a href="#hierarchy">Hierarchie</a>
+    <a href="#status">Status &amp; Fortschritt</a>
+
+    <span class="nav-section">Arbeiten mit Project Flow</span>
+    <a href="#projektgruppen">Projektgruppen</a>
+    <a href="#projekte">Projekte</a>
+    <a href="#topics">Topics</a>
+    <a href="#deliverables">Deliverables</a>
+    <a href="#userstories">User Stories &amp; Bugs</a>
+    <a href="#tasks">Tasks</a>
+    <a href="#sprints">Sprints</a>
+
+    <span class="nav-section">Team &amp; Rechte</span>
+    <a href="#mitglieder">Projektmitglieder</a>
+    <a href="#rollen">Rollen &amp; Berechtigungen</a>
+
+    <span class="nav-section">Verwaltung</span>
+    <a href="#profil">Mein Profil</a>
+    <a href="#admin">Administration</a>
+    <a href="#tipps">Tipps &amp; Tricks</a>
+  </nav>
+</aside>
+
+<!-- ════════════════════════════════════════════════════════════ CONTENT -->
+<main id="content">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>Project Flow</h1>
+    <p>Hierarchisches Projektmanagement für Teams – von der grossen Idee bis zum einzelnen Task.</p>
+    <span class="version">Benutzerhandbuch · Version 0.3.7</span>
+  </div>
+
+  <article>
+
+    <!-- ── INTRO ───────────────────────────────────────────────────────── -->
+    <section id="intro">
+      <h2>Was ist Project Flow?</h2>
+      <p>
+        <strong>Project Flow</strong> ist ein webbasiertes Projektmanagement-Tool, das Teams dabei
+        hilft, Arbeit strukturiert zu planen und nachzuverfolgen. Es verbindet klassische
+        hierarchische Gliederung (von der Projektgruppe bis zum einzelnen Task) mit
+        modernen Kanban-Boards und flexiblen Sprint-Planungsmöglichkeiten.
+      </p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="icon">🗂️</div>
+          <h4>Klare Struktur</h4>
+          <p>Projekte, Topics, Deliverables und Tasks in einer durchgängigen Hierarchie.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📋</div>
+          <h4>Kanban-Boards</h4>
+          <p>Drag &amp; Drop über vier Status-Spalten – auf jedem Hierarchieniveau.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🏃</div>
+          <h4>Sprint-Planung</h4>
+          <p>User Stories und Bugs gezielt in Sprints einplanen und verfolgen.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🔐</div>
+          <h4>Granulare Rechte</h4>
+          <p>Projektmitglieder mit individuellen Rollen (Owner bis Viewer).</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📊</div>
+          <h4>Business Value</h4>
+          <p>Automatische Priorisierung per Drag &amp; Drop – der Business Value wird berechnet.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🔁</div>
+          <h4>Maturity-Tracking</h4>
+          <p>Fortschrittsbalken propagieren automatisch von unten nach oben.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── LOGIN ──────────────────────────────────────────────────────── -->
+    <section id="login">
+      <h2>Anmelden</h2>
+      <p>
+        Öffne Project Flow in deinem Browser. Auf der Anmeldeseite gibst du deinen
+        <strong>Benutzernamen</strong> und dein <strong>Passwort</strong> ein und klickst
+        auf <em>Anmelden</em>.
+      </p>
+      <ol class="steps">
+        <li>Browser öffnen und zur Project-Flow-URL navigieren.</li>
+        <li>Benutzernamen und Passwort eingeben.</li>
+        <li>Auf <strong>Anmelden</strong> klicken.</li>
+        <li>Du landest direkt auf der Projektübersicht.</li>
+      </ol>
+      <div class="box warn">
+        <strong>Passwort vergessen?</strong>
+        Wende dich an deinen Administrator – es gibt noch keine Selbstverwaltung
+        von Passwörtern über die Anmeldeseite.
+      </div>
+    </section>
+
+    <!-- ── NAVIGATION ─────────────────────────────────────────────────── -->
+    <section id="navigation">
+      <h2>Navigation</h2>
+      <p>
+        Die linke Seitenleiste ist der zentrale Einstiegspunkt. Sie zeigt alle
+        Projektgruppen und die dazugehörigen Projekte – sowie für jedes Projekt
+        die verfügbaren Sprints.
+      </p>
+
+      <h3>Seitenleiste (Sidebar)</h3>
+      <table>
+        <thead><tr><th>Element</th><th>Beschreibung</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Projektgruppen</strong></td><td>Aufklappbare Bereiche, die Projekte logisch bündeln.</td></tr>
+          <tr><td><strong>Projekte</strong></td><td>Klick öffnet das Projekt mit Topics und Deliverables.</td></tr>
+          <tr><td><strong>Sprints</strong></td><td>Vergangene, laufende und geplante Sprints eines Projekts.</td></tr>
+          <tr><td><strong>Einstellungen</strong> (Admin)</td><td>Benutzerverwaltung und Berechtigungskonfiguration.</td></tr>
+          <tr><td><strong>Mein Profil</strong></td><td>Persönliche Daten einsehen und anpassen.</td></tr>
+          <tr><td><strong>Abmelden</strong></td><td>Sitzung beenden.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="box tip">
+        <strong>Tipp</strong>
+        Projekte in der Sidebar können per Drag &amp; Drop zwischen Projektgruppen
+        verschoben werden.
+      </div>
+    </section>
+
+    <!-- ── HIERARCHY ──────────────────────────────────────────────────── -->
+    <section id="hierarchy">
+      <h2>Hierarchie</h2>
+      <p>
+        Project Flow organisiert Arbeit in einer klaren Baumstruktur. Jede Ebene
+        verfügt über eigene Status-, Priorisierungs- und Beschreibungsfelder.
+      </p>
+
+      <div class="hierarchy">
+        <div class="lvl0">🗂️  Projektgruppe</div>
+        <div class="lvl1">&nbsp;&nbsp;&nbsp;└─ 📁  Projekt</div>
+        <div class="lvl2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ 📌  Topic</div>
+        <div class="lvl3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 📦  Deliverable</div>
+        <div class="lvl4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ 📝  User Story</div>
+        <div class="lvl5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ ✅  Task</div>
+        <div class="lvl4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 🐛  Bug</div>
+        <div class="lvl5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ ✅  Task</div>
+        <div class="lvl2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 📦  Direktes Deliverable (ohne Topic)</div>
+        <div class="lvl2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 🏃  Sprint (parallel zu Topics)</div>
+      </div>
+
+      <table>
+        <thead><tr><th>Ebene</th><th>Wozu?</th><th>Typischer Inhalt</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Projektgruppe</strong></td>
+            <td>Thematische Bündelung von Projekten</td>
+            <td>„Kundenprojekte", „Interne Tools"</td>
+          </tr>
+          <tr>
+            <td><strong>Projekt</strong></td>
+            <td>Eigenständiges Vorhaben mit Team und Timeline</td>
+            <td>„Website-Relaunch Q3"</td>
+          </tr>
+          <tr>
+            <td><strong>Topic</strong></td>
+            <td>Thematischer Gliederungsbereich im Projekt</td>
+            <td>„Backend", „Design", „Marketing"</td>
+          </tr>
+          <tr>
+            <td><strong>Deliverable</strong></td>
+            <td>Lieferobjekt / Epic mit klarem Ergebnis</td>
+            <td>„Login-System", „Startseite"</td>
+          </tr>
+          <tr>
+            <td><strong>User Story / Bug</strong></td>
+            <td>Konkrete Anforderung oder Fehler</td>
+            <td>„Als Nutzer möchte ich…"</td>
+          </tr>
+          <tr>
+            <td><strong>Task</strong></td>
+            <td>Kleinste Arbeitseinheit</td>
+            <td>„Formularvalidierung implementieren"</td>
+          </tr>
+          <tr>
+            <td><strong>Sprint</strong></td>
+            <td>Zeitbox für Stories und Bugs</td>
+            <td>„Sprint 4 – 01.03.–14.03."</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── STATUS & FORTSCHRITT ───────────────────────────────────────── -->
+    <section id="status">
+      <h2>Status &amp; Fortschritt</h2>
+
+      <h3>Status-Werte</h3>
+      <p>Deliverables, User Stories, Bugs und Tasks haben vier mögliche Status:</p>
+
+      <table>
+        <thead><tr><th>Status</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge todo">To Do</span></td><td>Noch nicht begonnen.</td></tr>
+          <tr><td><span class="badge progress">In Progress</span></td><td>In Bearbeitung.</td></tr>
+          <tr><td><span class="badge done">Done</span></td><td>Abgeschlossen.</td></tr>
+          <tr><td><span class="badge hold">On Hold</span></td><td>Vorübergehend pausiert.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Maturity (Reifegrad)</h3>
+      <p>
+        Jede Ebene zeigt einen Fortschrittsbalken (<em>Maturity %</em>), der automatisch
+        aus den untergeordneten Elementen berechnet wird. Ein Deliverable mit
+        drei abgeschlossenen von fünf User Stories hat einen Reifegrad von 60 %.
+        Der Fortschritt propagiert nach oben bis zum Topic.
+      </p>
+
+      <h3>Business Value (BV)</h3>
+      <p>
+        Der Business Value ist eine numerische Priorität. Beim Umsortieren von
+        User Stories oder Bugs per Drag &amp; Drop auf dem Kanban-Board wird der
+        Business Value automatisch neu berechnet – die oberste Karte erhält
+        den höchsten Wert.
+      </p>
+    </section>
+
+    <!-- ── PROJEKTGRUPPEN ─────────────────────────────────────────────── -->
+    <section id="projektgruppen">
+      <h2>Projektgruppen</h2>
+      <p>
+        Projektgruppen sind Container auf oberster Ebene. Sie helfen, viele Projekte
+        thematisch zu ordnen – z. B. nach Kunde, Abteilung oder Produktbereich.
+      </p>
+
+      <h3>Projektgruppe anlegen</h3>
+      <ol class="steps">
+        <li>In der Sidebar auf <strong>+ Projektgruppe</strong> klicken (nur Administratoren).</li>
+        <li>Name und optionale Beschreibung eingeben.</li>
+        <li>Speichern – die Gruppe erscheint sofort in der Sidebar.</li>
+      </ol>
+
+      <h3>Projektgruppe bearbeiten / löschen</h3>
+      <p>
+        Klicke auf den Namen der Projektgruppe in der Sidebar oder navigiere zu
+        <em>Projektgruppen</em>. Über das Stift-Icon kannst du Name und Beschreibung
+        anpassen. Das Löschen ist nur möglich, wenn der Gruppe keine Projekte
+        mehr zugeordnet sind.
+      </p>
+
+      <div class="box info">
+        <strong>Hinweis</strong>
+        Das Anlegen, Bearbeiten und Löschen von Projektgruppen ist ausschliesslich
+        Administratoren vorbehalten.
+      </div>
+    </section>
+
+    <!-- ── PROJEKTE ───────────────────────────────────────────────────── -->
+    <section id="projekte">
+      <h2>Projekte</h2>
+      <p>
+        Das Projekt ist der zentrale Arbeitsbereich. Es enthält alle Topics,
+        Deliverables, User Stories, Bugs, Tasks und Sprints.
+      </p>
+
+      <h3>Projekt anlegen</h3>
+      <ol class="steps">
+        <li>Navigiere zur gewünschten Projektgruppe.</li>
+        <li>Klicke auf <strong>+ Projekt</strong>.</li>
+        <li>Fülle Titel, Beschreibung, Status, Start- und Enddatum aus.</li>
+        <li>Speichern.</li>
+      </ol>
+
+      <h3>Projektansicht – Reiter „Inhalt"</h3>
+      <p>Die Hauptansicht eines Projekts zeigt zwei Bereiche:</p>
+      <ul style="margin: 0 0 14px 24px;">
+        <li><strong>Topics</strong> – als sortierbare Liste mit Fortschrittsbalken</li>
+        <li><strong>Direktdeliverables</strong> – Deliverables direkt am Projekt (ohne Topic)</li>
+      </ul>
+      <p>
+        Über den Sortier-Schalter kannst du zwischen manueller Reihenfolge (Drag &amp; Drop),
+        Business Value, Alphabet und Erstellungsdatum wechseln.
+      </p>
+
+      <h3>Projektansicht – Reiter „Mitglieder"</h3>
+      <p>
+        Hier verwaltest du das Projektteam. Mitglieder hinzufügen, entfernen und
+        deren Rolle anpassen – alles in einer Übersicht.
+        Nur Nutzer, die Mitglied eines Projekts sind, können es sehen und
+        darin arbeiten (Ausnahme: Superuser sehen alle Projekte).
+      </p>
+
+      <h3>Projektstatus</h3>
+      <table>
+        <thead><tr><th>Status</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td>Aktiv</td><td>Projekt läuft regulär.</td></tr>
+          <tr><td>On Hold</td><td>Vorübergehend pausiert.</td></tr>
+          <tr><td>Abgeschlossen</td><td>Erfolgreich beendet.</td></tr>
+          <tr><td>Abgebrochen</td><td>Projekt wurde eingestellt.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── TOPICS ─────────────────────────────────────────────────────── -->
+    <section id="topics">
+      <h2>Topics</h2>
+      <p>
+        Topics gliedern ein Projekt thematisch – ähnlich wie Kapitel in einem Buch.
+        Ein Topic fasst alle Deliverables einer bestimmten Themendomäne zusammen.
+      </p>
+
+      <h3>Topic anlegen</h3>
+      <ol class="steps">
+        <li>Im Projekt zur Inhalt-Ansicht navigieren.</li>
+        <li>Auf <strong>+ Topic</strong> klicken.</li>
+        <li>Titel, Beschreibung, Priorität (Hoch / Mittel / Niedrig), Business Value,
+            Start- und Enddatum sowie optional einen Verantwortlichen eingeben.</li>
+        <li>Speichern.</li>
+      </ol>
+
+      <h3>Topic-Detailansicht</h3>
+      <p>
+        Ein Klick auf ein Topic öffnet das zugehörige <strong>Kanban-Board</strong>
+        mit allen Deliverables in vier Spalten:
+      </p>
+
+      <div class="kanban-preview">
+        <div class="kanban-col todo">
+          <div class="kanban-col-header">To Do</div>
+          <div class="kanban-card">Design-System <span class="sp">8 Pt</span></div>
+          <div class="kanban-card">API-Konzept <span class="sp">5 Pt</span></div>
+        </div>
+        <div class="kanban-col progress">
+          <div class="kanban-col-header">In Progress</div>
+          <div class="kanban-card">Login-System <span class="sp">13 Pt</span></div>
+        </div>
+        <div class="kanban-col done">
+          <div class="kanban-col-header">Done</div>
+          <div class="kanban-card">Datenbankmodell <span class="sp">3 Pt</span></div>
+        </div>
+        <div class="kanban-col hold">
+          <div class="kanban-col-header">On Hold</div>
+          <div class="kanban-card">Reporting <span class="sp">21 Pt</span></div>
+        </div>
+      </div>
+
+      <p>
+        Deliverables können zwischen den Spalten gezogen werden – der Status ändert
+        sich automatisch. Mit dem Bearbeiten-Icon lassen sich Details ändern,
+        mit dem Kopier-Icon ein Deliverable duplizieren.
+      </p>
+
+      <div class="box tip">
+        <strong>Tipp</strong>
+        Im Topic kannst du den <strong>Business Value</strong> des Topics direkt
+        bearbeiten – hilfreich für die Priorisierung auf Projektebene.
+      </div>
+    </section>
+
+    <!-- ── DELIVERABLES ───────────────────────────────────────────────── -->
+    <section id="deliverables">
+      <h2>Deliverables</h2>
+      <p>
+        Ein Deliverable entspricht einem <em>Epic</em> oder Lieferobjekt – ein
+        abgegrenztes Ergebnis, das aus mehreren User Stories oder Bugs besteht.
+        Deliverables können einem Topic zugeordnet oder direkt am Projekt hängen.
+      </p>
+
+      <h3>Deliverable anlegen</h3>
+      <ol class="steps">
+        <li>Im Topic-Kanban-Board auf <strong>+ Deliverable</strong> klicken,
+            <em>oder</em> im Projekt-Reiter „Inhalt" unter <em>Direktdeliverables</em>.</li>
+        <li>Titel, Beschreibung, Epic Points, Business Value, Status und
+            Verantwortlichen eingeben.</li>
+        <li>Speichern.</li>
+      </ol>
+
+      <h3>Deliverable-Detailansicht</h3>
+      <p>Die Detailansicht zeigt zwei Reiter:</p>
+
+      <h4>Reiter „User Stories"</h4>
+      <p>
+        Kanban-Board mit vier Spalten. Neue Stories anlegen, per Drag &amp; Drop
+        sortieren und zwischen Spalten verschieben. Die Reihenfolge bestimmt
+        den Business Value.
+      </p>
+
+      <h4>Reiter „Bugs"</h4>
+      <p>
+        Gleicher Aufbau wie User Stories – speziell für Fehlerberichte. Bugs haben
+        dieselben Status-Werte und Felder.
+      </p>
+
+      <h3>Deliverable verschieben</h3>
+      <p>
+        Über den Button <strong>Verschieben nach…</strong> (oben rechts) kann ein
+        Deliverable einem anderen Topic oder Projekt zugeordnet werden.
+      </p>
+
+      <h3>Deliverable duplizieren</h3>
+      <p>
+        Das Kopier-Icon erstellt eine vollständige Kopie des Deliverables –
+        inklusive aller User Stories, Bugs und Tasks.
+      </p>
+    </section>
+
+    <!-- ── USER STORIES & BUGS ────────────────────────────────────────── -->
+    <section id="userstories">
+      <h2>User Stories &amp; Bugs</h2>
+      <p>
+        User Stories beschreiben Anforderungen aus Nutzersicht
+        (<em>„Als … möchte ich … damit …"</em>). Bugs erfassen Fehler oder unerwünschtes
+        Verhalten. Beide haben dieselbe Struktur und werden im jeweiligen
+        Deliverable-Kanban verwaltet.
+      </p>
+
+      <h3>User Story anlegen</h3>
+      <ol class="steps">
+        <li>Im Deliverable auf <strong>+ User Story</strong> klicken.</li>
+        <li>Felder ausfüllen: Titel, Beschreibung, Akzeptanzkriterien,
+            Story Points, Status, Verantwortlicher.</li>
+        <li>Optional: Sprint zuweisen.</li>
+        <li>Speichern.</li>
+      </ol>
+
+      <h3>Story-Detailansicht</h3>
+      <p>
+        Klicke auf eine Story-Karte, um die Detailansicht zu öffnen. Hier siehst
+        du alle Metadaten und kannst die zugehörigen <strong>Tasks</strong> anlegen,
+        bearbeiten und per Drag &amp; Drop sortieren.
+      </p>
+
+      <h3>Felder im Überblick</h3>
+      <table>
+        <thead><tr><th>Feld</th><th>Beschreibung</th></tr></thead>
+        <tbody>
+          <tr><td>Titel</td><td>Kurze, prägnante Bezeichnung.</td></tr>
+          <tr><td>Beschreibung</td><td>Detaillierte Erläuterung der Anforderung.</td></tr>
+          <tr><td>Akzeptanzkriterien</td><td>Messbare Bedingungen für die Fertigstellung.</td></tr>
+          <tr><td>Story Points</td><td>Relativer Aufwandswert (Fibonacci-Skala empfohlen).</td></tr>
+          <tr><td>Business Value</td><td>Priorität im Verhältnis zu anderen Stories.</td></tr>
+          <tr><td>Status</td><td>To Do / In Progress / Done / On Hold</td></tr>
+          <tr><td>Verantwortlicher</td><td>Name der zuständigen Person.</td></tr>
+          <tr><td>Sprint</td><td>Zuordnung zu einem Sprint (optional).</td></tr>
+        </tbody>
+      </table>
+
+      <div class="box tip">
+        <strong>Business Value per Drag &amp; Drop</strong>
+        Wenn du Stories auf dem Kanban-Board umsortierst, wird der Business Value
+        automatisch neu verteilt – du musst keine Zahlen manuell eintippen.
+      </div>
+    </section>
+
+    <!-- ── TASKS ──────────────────────────────────────────────────────── -->
+    <section id="tasks">
+      <h2>Tasks</h2>
+      <p>
+        Tasks sind die kleinste Arbeitseinheit in Project Flow. Sie hängen direkt
+        unter einer User Story oder einem Bug und beschreiben konkrete
+        Implementierungsschritte.
+      </p>
+
+      <h3>Task anlegen</h3>
+      <ol class="steps">
+        <li>Story- oder Bug-Detailansicht öffnen.</li>
+        <li>Auf <strong>+ Task</strong> klicken.</li>
+        <li>Titel, Beschreibung, Aufwand (in Stunden), Status und
+            Verantwortlichen eingeben.</li>
+        <li>Speichern.</li>
+      </ol>
+
+      <h3>Tasks sortieren</h3>
+      <p>
+        Tasks lassen sich per Drag &amp; Drop in der Reihenfolge anpassen.
+        Der Status kann direkt in der Liste geändert werden.
+      </p>
+
+      <h3>Task-Status</h3>
+      <table>
+        <thead><tr><th>Status</th><th>Wann nutzen?</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge todo">To Do</span></td><td>Task ist geplant, aber noch nicht gestartet.</td></tr>
+          <tr><td><span class="badge progress">In Progress</span></td><td>Task wird aktiv bearbeitet.</td></tr>
+          <tr><td><span class="badge done">Done</span></td><td>Task ist fertig und abgenommen.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── SPRINTS ────────────────────────────────────────────────────── -->
+    <section id="sprints">
+      <h2>Sprints</h2>
+      <p>
+        Sprints sind Zeitboxen, in denen du User Stories und Bugs aus verschiedenen
+        Deliverables bündelst und als Team abarbeitest – klassische agile
+        Iteration.
+      </p>
+
+      <h3>Sprint anlegen</h3>
+      <ol class="steps">
+        <li>Im Projekt in der Sidebar auf <strong>Sprints</strong> klicken.</li>
+        <li>Auf <strong>+ Sprint</strong> klicken.</li>
+        <li>Name, Startdatum, Enddatum und Sprint-Ziel eingeben.</li>
+        <li>Speichern.</li>
+      </ol>
+
+      <h3>Sprint-Detailansicht</h3>
+      <p>Die Sprint-Ansicht zeigt zwei Reiter:</p>
+      <ul style="margin: 0 0 14px 24px;">
+        <li><strong>User Stories</strong> – Kanban-Board mit allen Stories dieses Sprints</li>
+        <li><strong>Bugs</strong> – Kanban-Board mit allen Bugs dieses Sprints</li>
+      </ul>
+      <p>
+        Oben siehst du die <strong>Story-Point-Zusammenfassung</strong>: Gesamtpunkte
+        des Sprints und bereits erledigte Punkte.
+      </p>
+
+      <h3>Story einem Sprint zuweisen</h3>
+      <p>
+        Öffne die User Story und wähle im Feld <em>Sprint</em> den gewünschten Sprint.
+        Alternativ kannst du direkt aus der Sprint-Ansicht neue Stories anlegen –
+        sie werden automatisch diesem Sprint zugeordnet.
+      </p>
+
+      <h3>Sprint-Übersicht in der Sidebar</h3>
+      <p>Die Sidebar zeigt pro Projekt:</p>
+      <ul style="margin: 0 0 14px 24px;">
+        <li>Die letzten 1 abgeschlossenen Sprints</li>
+        <li>Den aktuell laufenden Sprint</li>
+        <li>Die nächsten 5 geplanten Sprints</li>
+        <li>Alle undatierten Sprints</li>
+      </ul>
+    </section>
+
+    <!-- ── MITGLIEDER ─────────────────────────────────────────────────── -->
+    <section id="mitglieder">
+      <h2>Projektmitglieder</h2>
+      <p>
+        Jedes Projekt hat ein eigenes Team. Nur Nutzer, die als Mitglied
+        eingetragen sind, können das Projekt sehen und – je nach Rolle –
+        darin arbeiten.
+      </p>
+
+      <h3>Mitglied hinzufügen</h3>
+      <ol class="steps">
+        <li>Projekt öffnen, Reiter <strong>Mitglieder</strong> wählen.</li>
+        <li>Im Dropdown <em>Mitglied hinzufügen</em> den Nutzer auswählen.</li>
+        <li>Rolle vergeben (Owner, Manager, Member oder Viewer).</li>
+        <li>Auf <strong>Hinzufügen</strong> klicken.</li>
+      </ol>
+
+      <h3>Rolle ändern / Mitglied entfernen</h3>
+      <p>
+        In der Mitgliederliste kann die Rolle über ein Dropdown geändert werden.
+        Über das Entfernen-Icon wird die Mitgliedschaft gelöscht.
+      </p>
+
+      <div class="box warn">
+        <strong>Achtung</strong>
+        Ein Nutzer, der aus einem Projekt entfernt wird, verliert sofort den
+        Zugang – er kann das Projekt weder sehen noch bearbeiten.
+      </div>
+    </section>
+
+    <!-- ── ROLLEN & BERECHTIGUNGEN ────────────────────────────────────── -->
+    <section id="rollen">
+      <h2>Rollen &amp; Berechtigungen</h2>
+
+      <h3>Globale Rollen</h3>
+      <table>
+        <thead><tr><th>Rolle</th><th>Beschreibung</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge role-superuser">Superuser</span></td>
+            <td>Vollständiger Zugriff auf alle Projekte und Daten – umgeht alle Berechtigungsprüfungen.</td>
+          </tr>
+          <tr>
+            <td><span class="badge role-admin">Admin</span></td>
+            <td>Zugriff auf Benutzerverwaltung und Berechtigungskonfiguration. Kein direktes Editieren von Projektinhalten.</td>
+          </tr>
+          <tr>
+            <td><span class="badge todo">User</span></td>
+            <td>Standardrolle. Zugriff nur auf Projekte, in denen der Nutzer Mitglied ist.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Projektrollen</h3>
+      <table>
+        <thead><tr><th>Rolle</th><th>Typische Rechte</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge owner">Owner</span></td>
+            <td>Vollständige Kontrolle: Lesen, Erstellen, Bearbeiten, Löschen, Mitgliederverwaltung.</td>
+          </tr>
+          <tr>
+            <td><span class="badge manager">Manager</span></td>
+            <td>Erstellen und Bearbeiten aller Artefakte, kein Löschen auf oberster Ebene.</td>
+          </tr>
+          <tr>
+            <td><span class="badge member">Member</span></td>
+            <td>Lesen und Bearbeiten zugewiesener Arbeit, eingeschränktes Erstellen.</td>
+          </tr>
+          <tr>
+            <td><span class="badge viewer">Viewer</span></td>
+            <td>Nur lesen – keine Änderungen möglich.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="box info">
+        <strong>Konfigurierbare Berechtigungen</strong>
+        Administratoren können unter <em>Einstellungen → Berechtigungen</em> die
+        genauen Lese-, Schreib-, Erstell- und Löschrechte pro Projektrole und
+        Artefakttyp (Topic, Deliverable, User Story, Task …) individuell anpassen.
+      </div>
+    </section>
+
+    <!-- ── PROFIL ─────────────────────────────────────────────────────── -->
+    <section id="profil">
+      <h2>Mein Profil</h2>
+      <p>
+        Unter <em>Mein Profil</em> (Sidebar unten) kannst du deine persönlichen Daten
+        einsehen:
+      </p>
+      <ul style="margin: 0 0 14px 24px;">
+        <li>Benutzername und E-Mail-Adresse</li>
+        <li>Vollständiger Name</li>
+        <li>Globale Rolle</li>
+        <li>Projektmitgliedschaften mit jeweiliger Rolle</li>
+      </ul>
+      <p>
+        Passwortänderungen und Änderungen am vollständigen Namen sind über
+        das Profil möglich. Den Benutzernamen kann nur ein Administrator anpassen.
+      </p>
+    </section>
+
+    <!-- ── ADMINISTRATION ─────────────────────────────────────────────── -->
+    <section id="admin">
+      <h2>Administration</h2>
+      <p>
+        Der Bereich <em>Einstellungen</em> in der Sidebar ist nur für Admins und
+        Superuser sichtbar.
+      </p>
+
+      <h3>Benutzerverwaltung</h3>
+      <ol class="steps">
+        <li>Sidebar → <strong>Einstellungen → Benutzer</strong>.</li>
+        <li>Benutzer suchen (nach Name, E-Mail oder Rolle filtern).</li>
+        <li>Neuen Benutzer anlegen oder bestehenden bearbeiten.</li>
+      </ol>
+
+      <table>
+        <thead><tr><th>Feld</th><th>Beschreibung</th></tr></thead>
+        <tbody>
+          <tr><td>Benutzername</td><td>Eindeutig, wird für den Login verwendet.</td></tr>
+          <tr><td>E-Mail</td><td>Eindeutig, für Benachrichtigungen (zukünftig).</td></tr>
+          <tr><td>Vollständiger Name</td><td>Anzeigename in der Anwendung.</td></tr>
+          <tr><td>Passwort</td><td>Beim Anlegen setzen; kann später geändert werden.</td></tr>
+          <tr><td>Globale Rolle</td><td>User / Admin / Superuser</td></tr>
+          <tr><td>Aktiv</td><td>Inaktive Nutzer können sich nicht anmelden.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Berechtigungskonfiguration</h3>
+      <p>
+        Unter <em>Einstellungen → Berechtigungen</em> wähle eine Projektrolle und
+        passe die Rechte per Checkbox an:
+      </p>
+      <ul style="margin: 0 0 14px 24px;">
+        <li><strong>Lesen</strong> – Artefakt sichtbar?</li>
+        <li><strong>Schreiben</strong> – Artefakt bearbeitbar?</li>
+        <li><strong>Erstellen</strong> – Neue Elemente anlegen?</li>
+        <li><strong>Löschen</strong> – Elemente entfernen?</li>
+      </ul>
+      <p>
+        Berechtigungen können an Kinder-Artefakte vererbt werden (Option
+        <em>Vererbung aktiv</em>).
+      </p>
+    </section>
+
+    <!-- ── TIPPS ──────────────────────────────────────────────────────── -->
+    <section id="tipps">
+      <h2>Tipps &amp; Tricks</h2>
+
+      <h3>Drag &amp; Drop effizient nutzen</h3>
+      <ul style="margin: 0 0 14px 24px;">
+        <li>Topics im Projekt per Drag &amp; Drop in der gewünschten Reihenfolge anordnen.</li>
+        <li>Deliverables im Topic-Kanban zwischen Spalten ziehen → Status ändert sich automatisch.</li>
+        <li>User Stories in der Sprint-Ansicht sortieren → Business Value wird automatisch neu vergeben.</li>
+        <li>Tasks in der Story-Detailansicht priorisieren.</li>
+      </ul>
+
+      <h3>Schnelles Status-Update</h3>
+      <p>
+        Auf vielen Karten gibt es ein kleines Status-Icon zum Direkt-Klicken –
+        du musst nicht erst in die Detailansicht wechseln.
+      </p>
+
+      <h3>Lange Kanban-Spalten</h3>
+      <p>
+        Spalten mit mehr als fünf Einträgen werden automatisch gekürzt.
+        Ein <em>Alle anzeigen</em>-Toggle blendet alle Karten ein.
+      </p>
+
+      <h3>Duplizieren statt neu anlegen</h3>
+      <p>
+        Deliverables, User Stories und Bugs können dupliziert werden. Ideal, um
+        wiederkehrende Vorlagen schnell anzupassen.
+      </p>
+
+      <h3>Breadcrumbs &amp; Zurück-Navigation</h3>
+      <p>
+        Die Zurück-Schaltfläche oben links berücksichtigt den Kontext. Wenn du
+        eine Story aus einem Sprint geöffnet hast, bringt sie dich zurück zum
+        Sprint – nicht zur Deliverable-Ansicht.
+      </p>
+
+      <h3>Projektlisting</h3>
+      <p>
+        Reguläre Nutzer sehen nur Projekte, denen sie als Mitglied zugeordnet
+        sind. Wenn ein Projekt fehlt, bitte einen Owner oder Manager,
+        dich hinzuzufügen.
+      </p>
+
+      <div class="box tip">
+        <strong>Keyboard-Shortcut</strong>
+        Die meisten Formulare lassen sich mit <kbd>Enter</kbd> bestätigen und
+        mit <kbd>Escape</kbd> abbrechen.
+      </div>
+    </section>
+
+    <!-- ── FOOTER ─────────────────────────────────────────────────────── -->
+    <hr style="border:none; border-top:1px solid var(--gray-200); margin: 0 0 24px;" />
+    <p style="font-size:.85rem; color:var(--gray-600);">
+      Project Flow · Benutzerhandbuch · Version 0.3.7 · Stand Februar 2026
+    </p>
+
+  </article>
+</main>
+
+<!-- Sidebar active-link tracking -->
+<script>
+  const links = document.querySelectorAll('#sidebar nav a');
+  const sections = [...links].map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = [...links].find(l => l.getAttribute('href') === '#' + e.target.id);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

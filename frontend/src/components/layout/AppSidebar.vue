@@ -26,6 +26,7 @@ import {
   ListBulletIcon,
   Cog6ToothIcon,
   LockClosedIcon,
+  DocumentTextIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -254,6 +255,19 @@ async function logout() {
         </draggable>
       </div>
 
+    </div>
+
+    <!-- Dokumentation -->
+    <div class="px-2 border-t border-gray-800 pt-2 pb-1">
+      <a
+        href="/docs/enduser-guide.html"
+        target="_blank"
+        rel="noopener"
+        class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+      >
+        <DocumentTextIcon class="h-5 w-5" />
+        Dokumentation
+      </a>
     </div>
 
     <!-- Artefakt-Legende -->
