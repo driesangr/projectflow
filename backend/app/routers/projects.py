@@ -4,15 +4,16 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.permissions import check_artifact_permission, require_artifact_permission
 from app.database import get_db
 from app.models.audit_log import AuditAction, AuditLog
 from app.models.project import Project
+from app.models.project_membership import ProjectMembership
 from app.models.role_permission import ArtifactType
-from app.models.user import User
+from app.models.user import GlobalRole, User
 from app.routers.auth import get_current_user
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 
@@ -22,11 +23,19 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 @router.get("/", response_model=list[ProjectResponse], summary="List all projects")
 async def list_projects(
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> list[Project]:
-    result = await db.execute(
-        select(Project).where(Project.is_deleted.is_(False)).order_by(Project.created_at.desc())
-    )
+    stmt = select(Project).where(Project.is_deleted.is_(False)).order_by(Project.created_at.desc())
+
+    if current_user.global_role not in (GlobalRole.superuser, GlobalRole.admin):
+        stmt = stmt.where(
+            exists().where(
+                ProjectMembership.project_id == Project.id,
+                ProjectMembership.user_id == current_user.id,
+            )
+        )
+
+    result = await db.execute(stmt)
     return result.scalars().all()
 
 

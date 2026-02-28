@@ -16,6 +16,7 @@ _ENDPOINT_MAP: dict[str, str] = {
     "deliverable": "/deliverables",
     "topic": "/topics",
     "project": "/projects",
+    "users": "/users",
 }
 
 
