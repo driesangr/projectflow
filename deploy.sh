@@ -19,6 +19,7 @@ VERSION=${2:-$(git describe --tags --abbrev=0 2>/dev/null || echo "latest")}
 
 COMPOSE_FILE="docker-compose.${ENVIRONMENT}.yml"
 ENV_FILE=".env.${ENVIRONMENT}"
+COMPOSE_PROJECT="projectflow-${ENVIRONMENT}"
 
 # ── Farben ────────────────────────────────────────────────────────────────────
 GREEN='\033[0;32m'
@@ -50,17 +51,17 @@ fi
 
 # ── 1. Code aktualisieren ─────────────────────────────────────────────────────
 echo -e "${YELLOW}[1/4] Code aktualisieren...${NC}"
-git fetch --tags
+git fetch --tags --force
 git checkout "${VERSION}" 2>/dev/null || git pull origin master
 
 # ── 2. Docker Images bauen ────────────────────────────────────────────────────
 echo -e "${YELLOW}[2/4] Docker Images bauen (${VERSION})...${NC}"
-VERSION="${VERSION}" docker compose -f "${COMPOSE_FILE}" build
+VERSION="${VERSION}" docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" build
 
 # ── 3. Container neu starten ──────────────────────────────────────────────────
 # Alembic-Migrationen laufen automatisch beim Backend-Start (CMD im Dockerfile)
 echo -e "${YELLOW}[3/4] Container neu starten...${NC}"
-VERSION="${VERSION}" docker compose -f "${COMPOSE_FILE}" up -d
+VERSION="${VERSION}" docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" up -d
 
 # ── 4. Health Check ───────────────────────────────────────────────────────────
 echo -e "${YELLOW}[4/4] Health Check...${NC}"

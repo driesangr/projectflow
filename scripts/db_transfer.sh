@@ -13,20 +13,20 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-# Port-Mapping
-port_for() {
+# Container-Name-Mapping (Docker exec statt lokalem pg_dump)
+container_for() {
     case "$1" in
-        dev)        echo "5432" ;;
-        staging)    echo "5433" ;;
-        production) echo "5434" ;;
+        dev)        echo "6cf45cc547f0_projectflow-db-1" ;;
+        staging)    echo "projectflow-staging-db-1" ;;
+        production) echo "projectflow-production-db-1" ;;
         *)          echo -e "\033[0;31mERROR: Unbekannte Umgebung '$1'. Gültig: dev | staging | production\033[0m" >&2; exit 1 ;;
     esac
 }
 
 SOURCE_ENV=${1:-dev}
 TARGET_ENV=${2:-staging}
-SOURCE_PORT=$(port_for "$SOURCE_ENV")
-TARGET_PORT=$(port_for "$TARGET_ENV")
+SOURCE_CONTAINER=$(container_for "$SOURCE_ENV")
+TARGET_CONTAINER=$(container_for "$TARGET_ENV")
 
 DB_USER="projectflow"
 DB_NAME="projectflow"
@@ -41,8 +41,8 @@ echo ""
 echo "╔══════════════════════════════════════════╗"
 echo "║     Project Flow – DB Transfer           ║"
 echo "╚══════════════════════════════════════════╝"
-echo "  Quelle : ${SOURCE_ENV} (Port ${SOURCE_PORT})"
-echo "  Ziel   : ${TARGET_ENV} (Port ${TARGET_PORT})"
+echo "  Quelle : ${SOURCE_ENV} (${SOURCE_CONTAINER})"
+echo "  Ziel   : ${TARGET_ENV} (${TARGET_CONTAINER})"
 echo "  Dump   : ${DUMP_FILE}"
 echo ""
 
@@ -56,41 +56,21 @@ if [[ "$TARGET_ENV" == "production" ]]; then
     fi
 fi
 
-# Passwort aus .env-Datei lesen (falls vorhanden)
-ENV_FILE=".env.${SOURCE_ENV}"
-if [[ -f "$ENV_FILE" ]]; then
-    DB_PASSWORD=$(grep -E '^POSTGRES_PASSWORD=' "$ENV_FILE" | cut -d= -f2 | tr -d '"' | tr -d "'")
-else
-    DB_PASSWORD="projectflow"
-fi
-
-echo -e "${YELLOW}[1/3] Dump aus ${SOURCE_ENV} (Port ${SOURCE_PORT})...${NC}"
-PGPASSWORD="$DB_PASSWORD" pg_dump \
-    -h localhost -p "$SOURCE_PORT" \
-    -U "$DB_USER" "$DB_NAME" \
-    --no-owner --no-acl \
+echo -e "${YELLOW}[1/3] Dump aus ${SOURCE_ENV} (Container: ${SOURCE_CONTAINER})...${NC}"
+docker exec "${SOURCE_CONTAINER}" \
+    pg_dump -U "$DB_USER" "$DB_NAME" --no-owner --no-acl \
     > "$DUMP_FILE"
 echo "  Dump erstellt: $(du -sh "$DUMP_FILE" | cut -f1)"
 
-# Ziel-Passwort
-ENV_FILE_TARGET=".env.${TARGET_ENV}"
-if [[ -f "$ENV_FILE_TARGET" ]]; then
-    DB_PASSWORD_TARGET=$(grep -E '^POSTGRES_PASSWORD=' "$ENV_FILE_TARGET" | cut -d= -f2 | tr -d '"' | tr -d "'")
-else
-    DB_PASSWORD_TARGET="projectflow"
-fi
-
-echo -e "${YELLOW}[2/3] Ziel-DB leeren (${TARGET_ENV}, Port ${TARGET_PORT})...${NC}"
-PGPASSWORD="$DB_PASSWORD_TARGET" psql \
-    -h localhost -p "$TARGET_PORT" \
-    -U "$DB_USER" "$DB_NAME" \
+echo -e "${YELLOW}[2/3] Ziel-DB leeren (${TARGET_ENV}, Container: ${TARGET_CONTAINER})...${NC}"
+docker exec "${TARGET_CONTAINER}" \
+    psql -U "$DB_USER" "$DB_NAME" \
     -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" \
     > /dev/null
 
-echo -e "${YELLOW}[3/3] Restore in ${TARGET_ENV} (Port ${TARGET_PORT})...${NC}"
-PGPASSWORD="$DB_PASSWORD_TARGET" psql \
-    -h localhost -p "$TARGET_PORT" \
-    -U "$DB_USER" "$DB_NAME" \
+echo -e "${YELLOW}[3/3] Restore in ${TARGET_ENV} (Container: ${TARGET_CONTAINER})...${NC}"
+docker exec -i "${TARGET_CONTAINER}" \
+    psql -U "$DB_USER" "$DB_NAME" \
     < "$DUMP_FILE" \
     > /dev/null
 
