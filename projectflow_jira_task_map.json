@@ -1,0 +1,224 @@
+{
+  "base_url": "http://localhost:8000",
+  "topic_id": "c86a46b1-f718-4155-92b0-e9a99aa27539",
+  "project_id": "16ba9238-a469-4c52-93fd-b21686a2587f",
+  "deliverables": {
+    "J1 | Datenbankmodell: Externe ID-Felder": {
+      "id": "09353729-7f60-4439-87fe-6b9e1386823b",
+      "status_endpoint": "http://localhost:8000/deliverables/09353729-7f60-4439-87fe-6b9e1386823b"
+    },
+    "J2 | Jira API-Client": {
+      "id": "8a65937f-77a8-421f-b85d-a3b0607c7d49",
+      "status_endpoint": "http://localhost:8000/deliverables/8a65937f-77a8-421f-b85d-a3b0607c7d49"
+    },
+    "J3 | Import: Jira → Project Flow": {
+      "id": "e6fa9dd6-a31a-4a43-80bf-64c9d89de59a",
+      "status_endpoint": "http://localhost:8000/deliverables/e6fa9dd6-a31a-4a43-80bf-64c9d89de59a"
+    },
+    "J4 | Export: Project Flow → Jira": {
+      "id": "cbd85c50-49d9-425a-af57-6d6ff0c722d9",
+      "status_endpoint": "http://localhost:8000/deliverables/cbd85c50-49d9-425a-af57-6d6ff0c722d9"
+    },
+    "J5 | Sync-Status & Konfliktbehandlung": {
+      "id": "4559bac2-4b41-4315-a5a0-cf4324c4b621",
+      "status_endpoint": "http://localhost:8000/deliverables/4559bac2-4b41-4315-a5a0-cf4324c4b621"
+    },
+    "J6 | REST-Endpunkte & Integration": {
+      "id": "6e29b3c8-0b72-4416-8689-0448c6cc77fb",
+      "status_endpoint": "http://localhost:8000/deliverables/6e29b3c8-0b72-4416-8689-0448c6cc77fb"
+    },
+    "J7 | Tests & Dokumentation": {
+      "id": "500dd042-1215-4165-bdeb-2fd7dd1dd48f",
+      "status_endpoint": "http://localhost:8000/deliverables/500dd042-1215-4165-bdeb-2fd7dd1dd48f"
+    }
+  },
+  "user_stories": {
+    "J1-1 | Modelle um Jira-Felder erweitern": {
+      "id": "969e6649-1c2e-48bf-b07e-83bc804873ca",
+      "deliverable_id": "09353729-7f60-4439-87fe-6b9e1386823b",
+      "status_endpoint": "http://localhost:8000/user-stories/969e6649-1c2e-48bf-b07e-83bc804873ca",
+      "tasks": {
+        "Task J1-1.1 | JiraSyncStatus-Enum und Felder in models/user_story.py ergänzen": {
+          "id": "6c9832a9-1ed2-4b05-a859-8ddf3a9f987d",
+          "status_endpoint": "http://localhost:8000/tasks/6c9832a9-1ed2-4b05-a859-8ddf3a9f987d"
+        },
+        "Task J1-1.2 | Dieselben Felder in models/task.py ergänzen": {
+          "id": "08b84181-4bb3-4a0c-9ce9-ffb93d3c5a91",
+          "status_endpoint": "http://localhost:8000/tasks/08b84181-4bb3-4a0c-9ce9-ffb93d3c5a91"
+        },
+        "Task J1-1.3 | Schemas (Pydantic) für neue Felder erweitern": {
+          "id": "3e46344d-befb-4437-aca4-ecff36262865",
+          "status_endpoint": "http://localhost:8000/tasks/3e46344d-befb-4437-aca4-ecff36262865"
+        }
+      }
+    },
+    "J1-2 | Alembic-Migration erstellen und anwenden": {
+      "id": "fa828282-3122-4972-a9c1-8624af36b365",
+      "deliverable_id": "09353729-7f60-4439-87fe-6b9e1386823b",
+      "status_endpoint": "http://localhost:8000/user-stories/fa828282-3122-4972-a9c1-8624af36b365",
+      "tasks": {
+        "Task J1-2.1 | Migrationsdatei generieren und prüfen": {
+          "id": "638b9f16-1c1d-46a2-a8d5-83f806474bdd",
+          "status_endpoint": "http://localhost:8000/tasks/638b9f16-1c1d-46a2-a8d5-83f806474bdd"
+        },
+        "Task J1-2.2 | Migration anwenden und Datenbankzustand verifizieren": {
+          "id": "62571130-c924-4129-b06d-b18a333f6bbd",
+          "status_endpoint": "http://localhost:8000/tasks/62571130-c924-4129-b06d-b18a333f6bbd"
+        }
+      }
+    },
+    "J2-1 | Jira-Konfiguration und Authentifizierung": {
+      "id": "385fe7af-368d-4063-80e8-d40c9e3e47ab",
+      "deliverable_id": "8a65937f-77a8-421f-b85d-a3b0607c7d49",
+      "status_endpoint": "http://localhost:8000/user-stories/385fe7af-368d-4063-80e8-d40c9e3e47ab",
+      "tasks": {
+        "Task J2-1.1 | Jira-Settings in app/core/config.py ergänzen": {
+          "id": "c32cc023-3dab-44e2-ad18-d0d75a5f56be",
+          "status_endpoint": "http://localhost:8000/tasks/c32cc023-3dab-44e2-ad18-d0d75a5f56be"
+        },
+        "Task J2-1.2 | .env.example um Jira-Variablen ergänzen": {
+          "id": "b7eb2264-aa0e-4306-9d84-e68ba4a9ff7c",
+          "status_endpoint": "http://localhost:8000/tasks/b7eb2264-aa0e-4306-9d84-e68ba4a9ff7c"
+        }
+      }
+    },
+    "J2-2 | JiraClient-Klasse implementieren": {
+      "id": "07ed5f4a-fcb5-4ee0-9026-d138d8582bb8",
+      "deliverable_id": "8a65937f-77a8-421f-b85d-a3b0607c7d49",
+      "status_endpoint": "http://localhost:8000/user-stories/07ed5f4a-fcb5-4ee0-9026-d138d8582bb8",
+      "tasks": {
+        "Task J2-2.1 | JiraClientError und Basisstruktur erstellen": {
+          "id": "c20eb60e-a01d-4af7-a583-133a1ee07b6c",
+          "status_endpoint": "http://localhost:8000/tasks/c20eb60e-a01d-4af7-a583-133a1ee07b6c"
+        },
+        "Task J2-2.2 | Methoden get_issue, search_issues implementieren": {
+          "id": "55bfb6fa-0edd-4c22-80cf-e1b0f63d36dd",
+          "status_endpoint": "http://localhost:8000/tasks/55bfb6fa-0edd-4c22-80cf-e1b0f63d36dd"
+        },
+        "Task J2-2.3 | Methoden create_issue, update_issue, get_project implementieren": {
+          "id": "a83caca4-1d05-43a5-bf14-4988c57441c8",
+          "status_endpoint": "http://localhost:8000/tasks/a83caca4-1d05-43a5-bf14-4988c57441c8"
+        }
+      }
+    },
+    "J3-1 | Jira-zu-ProjectFlow Mapping-Logik": {
+      "id": "51aba9b3-73aa-44aa-a88e-e027fe2d599d",
+      "deliverable_id": "e6fa9dd6-a31a-4a43-80bf-64c9d89de59a",
+      "status_endpoint": "http://localhost:8000/user-stories/51aba9b3-73aa-44aa-a88e-e027fe2d599d",
+      "tasks": {
+        "Task J3-1.1 | Mapping-Funktionen in app/services/jira_mapper.py implementieren": {
+          "id": "b03d28e4-c4e6-473e-9be8-cb18ae3e4cfe",
+          "status_endpoint": "http://localhost:8000/tasks/b03d28e4-c4e6-473e-9be8-cb18ae3e4cfe"
+        }
+      }
+    },
+    "J3-2 | Import-Service implementieren": {
+      "id": "b6406a08-8ddb-4d4e-84c8-59b0e96fcf8c",
+      "deliverable_id": "e6fa9dd6-a31a-4a43-80bf-64c9d89de59a",
+      "status_endpoint": "http://localhost:8000/user-stories/b6406a08-8ddb-4d4e-84c8-59b0e96fcf8c",
+      "tasks": {
+        "Task J3-2.1 | Import-Service Grundstruktur und Epic-Import": {
+          "id": "5fbde612-9d75-4caf-9321-526c9c749b30",
+          "status_endpoint": "http://localhost:8000/tasks/5fbde612-9d75-4caf-9321-526c9c749b30"
+        },
+        "Task J3-2.2 | Story- und Sub-task-Import implementieren": {
+          "id": "7cb9f11f-9715-4b1e-bbb6-fcfa568ae4f1",
+          "status_endpoint": "http://localhost:8000/tasks/7cb9f11f-9715-4b1e-bbb6-fcfa568ae4f1"
+        }
+      }
+    },
+    "J4-1 | Modified-Tracking: jira_sync_status automatisch setzen": {
+      "id": "4736e7de-e939-4669-b2f7-a66f0df98f22",
+      "deliverable_id": "cbd85c50-49d9-425a-af57-6d6ff0c722d9",
+      "status_endpoint": "http://localhost:8000/user-stories/4736e7de-e939-4669-b2f7-a66f0df98f22",
+      "tasks": {
+        "Task J4-1.1 | Modified-Tracking in routers/user_stories.py und tasks.py": {
+          "id": "74ee2a0d-6c16-4af6-8636-9614c991a894",
+          "status_endpoint": "http://localhost:8000/tasks/74ee2a0d-6c16-4af6-8636-9614c991a894"
+        }
+      }
+    },
+    "J4-2 | Export-Service implementieren": {
+      "id": "0b36326f-2ccf-4310-9363-e91c0489cd1d",
+      "deliverable_id": "cbd85c50-49d9-425a-af57-6d6ff0c722d9",
+      "status_endpoint": "http://localhost:8000/user-stories/0b36326f-2ccf-4310-9363-e91c0489cd1d",
+      "tasks": {
+        "Task J4-2.1 | Export-Service Grundstruktur und Feld-Export": {
+          "id": "61c8d4aa-1361-47b7-a028-e368292f742b",
+          "status_endpoint": "http://localhost:8000/tasks/61c8d4aa-1361-47b7-a028-e368292f742b"
+        },
+        "Task J4-2.2 | Status-Export via Jira Transition-API": {
+          "id": "75cbe864-a334-4551-9264-667a8b15a1e5",
+          "status_endpoint": "http://localhost:8000/tasks/75cbe864-a334-4551-9264-667a8b15a1e5"
+        }
+      }
+    },
+    "J5-1 | Konflikterkennung beim Import": {
+      "id": "9481ec09-6959-4dc7-a9ce-38a78cd4de62",
+      "deliverable_id": "4559bac2-4b41-4315-a5a0-cf4324c4b621",
+      "status_endpoint": "http://localhost:8000/user-stories/9481ec09-6959-4dc7-a9ce-38a78cd4de62",
+      "tasks": {
+        "Task J5-1.1 | Konflikt-Logik in jira_import.py ergänzen": {
+          "id": "067fc0eb-4602-4e20-a52f-366be74d944f",
+          "status_endpoint": "http://localhost:8000/tasks/067fc0eb-4602-4e20-a52f-366be74d944f"
+        }
+      }
+    },
+    "J5-2 | Konflikt-Auflösung API-Endpunkt": {
+      "id": "95b6911f-4d8f-414f-8cef-45d16f9eaaf9",
+      "deliverable_id": "4559bac2-4b41-4315-a5a0-cf4324c4b621",
+      "status_endpoint": "http://localhost:8000/user-stories/95b6911f-4d8f-414f-8cef-45d16f9eaaf9",
+      "tasks": {
+        "Task J5-2.1 | Konflikt-Auflösungs-Endpunkt in routers/jira.py implementieren": {
+          "id": "a61c57ad-0a32-41c5-afe3-e40cd330b18e",
+          "status_endpoint": "http://localhost:8000/tasks/a61c57ad-0a32-41c5-afe3-e40cd330b18e"
+        }
+      }
+    },
+    "J6-1 | Jira-Router mit Import- und Export-Endpunkten": {
+      "id": "d429c423-ea11-48de-bb71-4ca33c6a99e9",
+      "deliverable_id": "6e29b3c8-0b72-4416-8689-0448c6cc77fb",
+      "status_endpoint": "http://localhost:8000/user-stories/d429c423-ea11-48de-bb71-4ca33c6a99e9",
+      "tasks": {
+        "Task J6-1.1 | /jira/import und /jira/export Endpunkte": {
+          "id": "79c01026-3fd9-4ff7-98a3-cc659fd755ca",
+          "status_endpoint": "http://localhost:8000/tasks/79c01026-3fd9-4ff7-98a3-cc659fd755ca"
+        },
+        "Task J6-1.2 | /jira/status und /jira/conflicts Endpunkte": {
+          "id": "ee8fc1a4-9119-4768-8ed0-7a3b3088f747",
+          "status_endpoint": "http://localhost:8000/tasks/ee8fc1a4-9119-4768-8ed0-7a3b3088f747"
+        },
+        "Task J6-1.3 | Router in app/main.py einbinden": {
+          "id": "4465d7b8-a4f7-411d-a997-b73ebd41dfed",
+          "status_endpoint": "http://localhost:8000/tasks/4465d7b8-a4f7-411d-a997-b73ebd41dfed"
+        }
+      }
+    },
+    "J7-1 | Funktionstests mit Mock-JiraClient": {
+      "id": "1af0ed31-8b26-453a-956b-a99020353e43",
+      "deliverable_id": "500dd042-1215-4165-bdeb-2fd7dd1dd48f",
+      "status_endpoint": "http://localhost:8000/user-stories/1af0ed31-8b26-453a-956b-a99020353e43",
+      "tasks": {
+        "Task J7-1.1 | MockJiraClient und Import-Tests": {
+          "id": "dcfc3758-091b-4ac1-866e-b4f5f69351c1",
+          "status_endpoint": "http://localhost:8000/tasks/dcfc3758-091b-4ac1-866e-b4f5f69351c1"
+        },
+        "Task J7-1.2 | Export- und Konflikt-Tests": {
+          "id": "3f0f05e4-7e31-4c05-aa13-1890bffffec7",
+          "status_endpoint": "http://localhost:8000/tasks/3f0f05e4-7e31-4c05-aa13-1890bffffec7"
+        }
+      }
+    },
+    "J7-2 | Entwicklerdokumentation": {
+      "id": "f1e8ad40-4458-46b2-9ff2-a0778c4a447d",
+      "deliverable_id": "500dd042-1215-4165-bdeb-2fd7dd1dd48f",
+      "status_endpoint": "http://localhost:8000/user-stories/f1e8ad40-4458-46b2-9ff2-a0778c4a447d",
+      "tasks": {
+        "Task J7-2.1 | docs/jira_integration.md schreiben": {
+          "id": "d82c6d75-d943-485e-85b9-e9068b7f6e85",
+          "status_endpoint": "http://localhost:8000/tasks/d82c6d75-d943-485e-85b9-e9068b7f6e85"
+        }
+      }
+    }
+  }
+}
