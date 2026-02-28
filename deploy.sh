@@ -60,8 +60,10 @@ VERSION="${VERSION}" docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}"
 
 # ── 3. Container neu starten ──────────────────────────────────────────────────
 # Alembic-Migrationen laufen automatisch beim Backend-Start (CMD im Dockerfile)
+# DB wird nur gestartet, falls noch nicht running (verhindert Naming-Konflikte).
 echo -e "${YELLOW}[3/4] Container neu starten...${NC}"
-VERSION="${VERSION}" docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" up -d
+VERSION="${VERSION}" docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" up -d --no-recreate db 2>/dev/null || true
+VERSION="${VERSION}" docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" up -d backend frontend
 
 # ── 4. Health Check ───────────────────────────────────────────────────────────
 echo -e "${YELLOW}[4/4] Health Check...${NC}"
