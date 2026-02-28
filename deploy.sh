@@ -5,7 +5,7 @@
 # Usage:
 #   ./deploy.sh staging              # neuester Git-Tag
 #   ./deploy.sh staging v0.3.1      # bestimmter Tag
-#   ./deploy.sh production v0.3.1
+#   ./deploy.sh production v1.0.0
 #
 # Voraussetzungen:
 #   - .env.staging bzw. .env.production muss existieren (aus .example kopieren)
@@ -36,6 +36,16 @@ echo "  Version  : ${VERSION}"
 echo "  Compose  : ${COMPOSE_FILE}"
 echo ""
 
+# ── Sicherheitsabfrage bei Production ─────────────────────────────────────────
+if [[ "${ENVIRONMENT}" == "production" ]]; then
+    echo -e "${RED}ACHTUNG: Ziel ist PRODUCTION!${NC}"
+    read -r -p "Wirklich deployen? [ja/N] "
+    if [[ ! "${REPLY}" == "ja" ]]; then
+        echo "Abgebrochen."
+        exit 0
+    fi
+fi
+
 # ── Prüfungen ─────────────────────────────────────────────────────────────────
 if [[ ! -f "$COMPOSE_FILE" ]]; then
     echo -e "${RED}ERROR: $COMPOSE_FILE nicht gefunden.${NC}"
@@ -59,8 +69,8 @@ echo -e "${YELLOW}[2/4] Docker Images bauen (${VERSION})...${NC}"
 VERSION="${VERSION}" docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" build
 
 # ── 3. Container neu starten ──────────────────────────────────────────────────
-# Alembic-Migrationen laufen automatisch beim Backend-Start (CMD im Dockerfile)
 # DB wird nur gestartet, falls noch nicht running (verhindert Naming-Konflikte).
+# Alembic-Migrationen laufen automatisch über entrypoint.sh beim Backend-Start.
 echo -e "${YELLOW}[3/4] Container neu starten...${NC}"
 VERSION="${VERSION}" docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" up -d --no-recreate db 2>/dev/null || true
 VERSION="${VERSION}" docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" up -d backend frontend
@@ -69,15 +79,30 @@ VERSION="${VERSION}" docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}"
 echo -e "${YELLOW}[4/4] Health Check...${NC}"
 sleep 8
 
-# Backend-Port aus Compose-Datei ermitteln
-BACKEND_PORT=$(grep -A1 'backend:' "${COMPOSE_FILE}" | grep -oP '"\K[0-9]+(?=:8000)' | head -1 || echo "8000")
-
-if curl -sf "http://localhost:${BACKEND_PORT}/docs" > /dev/null 2>&1; then
-    echo -e "${GREEN}  Backend (Port ${BACKEND_PORT}): OK${NC}"
+if [[ "${ENVIRONMENT}" == "production" ]]; then
+    # In production the backend is not exposed; check via the frontend nginx proxy
+    FRONTEND_PORT=$(grep -oP '"\K[0-9]+(?=:80")' "${COMPOSE_FILE}" | head -1 || echo "8080")
+    if curl -sf "http://localhost:${FRONTEND_PORT}/api/docs" > /dev/null 2>&1; then
+        echo -e "${GREEN}  Frontend+API (Port ${FRONTEND_PORT}): OK${NC}"
+    else
+        echo -e "${YELLOW}  WARNUNG: Nicht erreichbar auf Port ${FRONTEND_PORT}.${NC}"
+        echo "  Logs prüfen: docker compose -p ${COMPOSE_PROJECT} -f ${COMPOSE_FILE} logs --tail=50"
+    fi
 else
-    echo -e "${YELLOW}  WARNUNG: Backend auf Port ${BACKEND_PORT} nicht erreichbar.${NC}"
-    echo "  Logs prüfen: docker compose -f ${COMPOSE_FILE} logs backend --tail=50"
+    # In staging the backend port is exposed directly
+    BACKEND_PORT=$(grep -oP '"\K[0-9]+(?=:8000")' "${COMPOSE_FILE}" | head -1 || echo "8000")
+    if curl -sf "http://localhost:${BACKEND_PORT}/docs" > /dev/null 2>&1; then
+        echo -e "${GREEN}  Backend (Port ${BACKEND_PORT}): OK${NC}"
+    else
+        echo -e "${YELLOW}  WARNUNG: Backend auf Port ${BACKEND_PORT} nicht erreichbar.${NC}"
+        echo "  Logs prüfen: docker compose -p ${COMPOSE_PROJECT} -f ${COMPOSE_FILE} logs backend --tail=50"
+    fi
 fi
+
+# ── Container-Status ──────────────────────────────────────────────────────────
+echo ""
+echo -e "${YELLOW}Container-Status:${NC}"
+docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" ps
 
 echo ""
 echo -e "${GREEN}══════════════════════════════════════════════${NC}"

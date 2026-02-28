@@ -1,41 +1,82 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Project Flow – Production Docker Compose
+#
+# Architecture:
+#   Apache (host) → port 8080 → frontend nginx → /api/* → backend:8000
+#                                               → /*    → Vue SPA (index.html)
+#
+# All services run on the internal projectflow-network.
+# Only the frontend is reachable from the host (port 8080).
+# The database is never exposed outside the Docker network.
+#
+# Usage:
+#   cp .env.production.example .env.production   # fill in secrets
+#   ./deploy.sh production v1.0.0
+# ─────────────────────────────────────────────────────────────────────────────
+
+networks:
+  projectflow-network:
+    driver: bridge
+
+volumes:
+  # Named volume ensures PostgreSQL data survives container restarts/upgrades
+  postgres_data_production:
+
 services:
 
+  # ── Database ────────────────────────────────────────────────────────────────
   db:
     image: postgres:16-alpine
-    restart: unless-stopped
+    restart: always
     env_file: .env.production
     volumes:
       - postgres_data_production:/var/lib/postgresql/data
-    # DB nicht nach außen exponieren – nur intern erreichbar
+    # No ports: section – DB is intentionally NOT reachable from the host
+    networks:
+      - projectflow-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U projectflow -d projectflow"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-projectflow} -d ${POSTGRES_DB:-projectflow}"]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 30s
 
+  # ── Backend (FastAPI) ────────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
     image: projectflow-backend:${VERSION:-latest}
-    restart: unless-stopped
+    restart: always
     depends_on:
       db:
         condition: service_healthy
     env_file: .env.production
-    ports:
-      - "8000:8000"
+    # No ports: section – backend is only reachable via the frontend nginx proxy
+    networks:
+      - projectflow-network
+    healthcheck:
+      # Use Python's stdlib so no extra tools are needed in the slim image
+      test: ["CMD", "python3", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
+  # ── Frontend (Vue 3 + nginx) ─────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        # /api is a relative URL; nginx inside this container proxies it to backend
+        VITE_API_BASE_URL: /api
     image: projectflow-frontend:${VERSION:-latest}
-    restart: unless-stopped
+    restart: always
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    networks:
+      - projectflow-network
     ports:
-      - "80:80"
-
-volumes:
-  postgres_data_production:
+      # Only port exposed to the host; Apache VHost proxies projectflow.driesang.de → here
+      - "8080:80"

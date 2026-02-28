@@ -20,8 +20,9 @@ WORKDIR /app
 # Copy installed packages from build stage
 COPY --from=builder /install /usr/local
 
-# Copy application source
+# Copy application source and entrypoint
 COPY . .
+RUN chmod +x entrypoint.sh
 
 # Non-root user for security
 RUN useradd --no-create-home --shell /bin/false appuser \
@@ -30,5 +31,6 @@ USER appuser
 
 EXPOSE 8000
 
-# Run database migrations then start the server
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+# entrypoint.sh runs migrations then starts uvicorn.
+# Extra CMD args (e.g. --reload) are forwarded to uvicorn.
+ENTRYPOINT ["./entrypoint.sh"]
