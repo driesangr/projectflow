@@ -14,15 +14,14 @@ import pytest
 from utils.api_client import ApiClient
 from utils.cleanup import CleanupRegistry
 
-# Testmodul topic used as parent for test deliverables
-TOPIC_ID = "3a4d2c03-124f-42b1-8891-06078c8447be"
-
 
 # ── TS-D1.1 | test_create_deliverable + test_list_deliverables_by_topic ───────
 
 @pytest.mark.asyncio
-async def test_create_deliverable(auth_client: ApiClient, cleanup_ids: CleanupRegistry):
-    payload = {"title": "Test-Deliverable", "topic_id": TOPIC_ID}
+async def test_create_deliverable(
+    auth_client: ApiClient, cleanup_ids: CleanupRegistry, test_topic_id: str
+):
+    payload = {"title": "Test-Deliverable", "topic_id": test_topic_id}
     resp = await auth_client.post("/deliverables/", json=payload)
     assert resp.status_code == 201, resp.text
     data = resp.json()
@@ -32,16 +31,18 @@ async def test_create_deliverable(auth_client: ApiClient, cleanup_ids: CleanupRe
 
 
 @pytest.mark.asyncio
-async def test_list_deliverables_by_topic(auth_client: ApiClient, cleanup_ids: CleanupRegistry):
+async def test_list_deliverables_by_topic(
+    auth_client: ApiClient, cleanup_ids: CleanupRegistry, test_topic_id: str
+):
     # Create a deliverable first
-    payload = {"title": "ListMe Deliverable", "topic_id": TOPIC_ID}
+    payload = {"title": "ListMe Deliverable", "topic_id": test_topic_id}
     resp = await auth_client.post("/deliverables/", json=payload)
     assert resp.status_code == 201
     created_id = resp.json()["id"]
     cleanup_ids.add("deliverable", created_id)
 
     # List by topic
-    resp = await auth_client.get("/deliverables/", params={"topic_id": TOPIC_ID})
+    resp = await auth_client.get("/deliverables/", params={"topic_id": test_topic_id})
     assert resp.status_code == 200
     ids = [d["id"] for d in resp.json()]
     assert created_id in ids
@@ -60,9 +61,11 @@ async def test_create_deliverable_missing_topic_id(auth_client: ApiClient):
 # ── TS-D2.1 | test_update_deliverable + test_delete_deliverable + test_update_nonexistent ─
 
 @pytest.mark.asyncio
-async def test_update_deliverable(auth_client: ApiClient, cleanup_ids: CleanupRegistry):
+async def test_update_deliverable(
+    auth_client: ApiClient, cleanup_ids: CleanupRegistry, test_topic_id: str
+):
     # Create
-    resp = await auth_client.post("/deliverables/", json={"title": "UpdateMe", "topic_id": TOPIC_ID})
+    resp = await auth_client.post("/deliverables/", json={"title": "UpdateMe", "topic_id": test_topic_id})
     assert resp.status_code == 201
     deliverable_id = resp.json()["id"]
     cleanup_ids.add("deliverable", deliverable_id)
@@ -74,9 +77,9 @@ async def test_update_deliverable(auth_client: ApiClient, cleanup_ids: CleanupRe
 
 
 @pytest.mark.asyncio
-async def test_delete_deliverable(auth_client: ApiClient):
+async def test_delete_deliverable(auth_client: ApiClient, test_topic_id: str):
     # Create
-    resp = await auth_client.post("/deliverables/", json={"title": "DeleteMe", "topic_id": TOPIC_ID})
+    resp = await auth_client.post("/deliverables/", json={"title": "DeleteMe", "topic_id": test_topic_id})
     assert resp.status_code == 201
     deliverable_id = resp.json()["id"]
 

@@ -13,13 +13,12 @@ import pytest
 from utils.api_client import ApiClient
 from utils.cleanup import CleanupRegistry
 
-# Use an existing deliverable as parent for helper user stories
-DELIVERABLE_ID = "45c66486-6320-463e-9108-0bd34d96f83e"
 
-
-async def _create_story(client: ApiClient, cleanup: CleanupRegistry) -> str:
+async def _create_story(client: ApiClient, cleanup: CleanupRegistry, deliverable_id: str) -> str:
     """Create a temporary user story and register it for cleanup."""
-    resp = await client.post("/user-stories/", json={"title": "Temp Story for Tasks", "deliverable_id": DELIVERABLE_ID})
+    resp = await client.post(
+        "/user-stories/", json={"title": "Temp Story for Tasks", "deliverable_id": deliverable_id}
+    )
     assert resp.status_code == 201
     story_id = resp.json()["id"]
     cleanup.add("user_story", story_id)
@@ -29,8 +28,10 @@ async def _create_story(client: ApiClient, cleanup: CleanupRegistry) -> str:
 # ── TS-TK1.1 | test_create_task + test_task_status_transition ────────────────
 
 @pytest.mark.asyncio
-async def test_create_task(auth_client: ApiClient, cleanup_ids: CleanupRegistry):
-    story_id = await _create_story(auth_client, cleanup_ids)
+async def test_create_task(
+    auth_client: ApiClient, cleanup_ids: CleanupRegistry, test_deliverable_id: str
+):
+    story_id = await _create_story(auth_client, cleanup_ids, test_deliverable_id)
 
     payload = {"title": "Test Task", "user_story_id": story_id}
     resp = await auth_client.post("/tasks/", json=payload)
@@ -44,8 +45,10 @@ async def test_create_task(auth_client: ApiClient, cleanup_ids: CleanupRegistry)
 
 
 @pytest.mark.asyncio
-async def test_task_status_transition(auth_client: ApiClient, cleanup_ids: CleanupRegistry):
-    story_id = await _create_story(auth_client, cleanup_ids)
+async def test_task_status_transition(
+    auth_client: ApiClient, cleanup_ids: CleanupRegistry, test_deliverable_id: str
+):
+    story_id = await _create_story(auth_client, cleanup_ids, test_deliverable_id)
 
     # Create task
     resp = await auth_client.post("/tasks/", json={"title": "Status Task", "user_story_id": story_id})
@@ -67,8 +70,10 @@ async def test_task_status_transition(auth_client: ApiClient, cleanup_ids: Clean
 # ── TS-TK1.2 | test_delete_task ───────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_delete_task(auth_client: ApiClient, cleanup_ids: CleanupRegistry):
-    story_id = await _create_story(auth_client, cleanup_ids)
+async def test_delete_task(
+    auth_client: ApiClient, cleanup_ids: CleanupRegistry, test_deliverable_id: str
+):
+    story_id = await _create_story(auth_client, cleanup_ids, test_deliverable_id)
 
     # Create task
     resp = await auth_client.post("/tasks/", json={"title": "DeleteMe Task", "user_story_id": story_id})

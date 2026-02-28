@@ -15,20 +15,19 @@ import pytest
 from utils.api_client import ApiClient
 from utils.cleanup import CleanupRegistry
 
-# Existing project used as parent for test topics
-PROJECT_ID = "16ba9238-a469-4c52-93fd-b21686a2587f"
-
 
 # ── TS-T1.1 | test_create_topic_success ──────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_create_topic_success(auth_client: ApiClient, cleanup_ids: CleanupRegistry):
-    payload = {"title": "Test-Topic Integration", "project_id": PROJECT_ID}
+async def test_create_topic_success(
+    auth_client: ApiClient, cleanup_ids: CleanupRegistry, test_project_id: str
+):
+    payload = {"title": "Test-Topic Integration", "project_id": test_project_id}
     resp = await auth_client.post("/topics/", json=payload)
     assert resp.status_code == 201, resp.text
     data = resp.json()
     assert data["title"] == "Test-Topic Integration"
-    assert data["project_id"] == PROJECT_ID
+    assert data["project_id"] == test_project_id
     assert "id" in data
     cleanup_ids.add("topic", data["id"])
 
@@ -36,8 +35,8 @@ async def test_create_topic_success(auth_client: ApiClient, cleanup_ids: Cleanup
 # ── TS-T1.2 | test_create_topic_missing_title + test_create_topic_invalid_project ─
 
 @pytest.mark.asyncio
-async def test_create_topic_missing_title(auth_client: ApiClient):
-    payload = {"project_id": PROJECT_ID}
+async def test_create_topic_missing_title(auth_client: ApiClient, test_project_id: str):
+    payload = {"project_id": test_project_id}
     resp = await auth_client.post("/topics/", json=payload)
     assert resp.status_code == 422
 
@@ -53,9 +52,11 @@ async def test_create_topic_invalid_project(auth_client: ApiClient):
 # ── TS-T2.1 | test_get_topic + test_update_topic ─────────────────────────────
 
 @pytest.mark.asyncio
-async def test_get_topic(auth_client: ApiClient, cleanup_ids: CleanupRegistry):
+async def test_get_topic(
+    auth_client: ApiClient, cleanup_ids: CleanupRegistry, test_project_id: str
+):
     # Create
-    resp = await auth_client.post("/topics/", json={"title": "GetMe", "project_id": PROJECT_ID})
+    resp = await auth_client.post("/topics/", json={"title": "GetMe", "project_id": test_project_id})
     assert resp.status_code == 201
     topic_id = resp.json()["id"]
     cleanup_ids.add("topic", topic_id)
@@ -69,9 +70,11 @@ async def test_get_topic(auth_client: ApiClient, cleanup_ids: CleanupRegistry):
 
 
 @pytest.mark.asyncio
-async def test_update_topic(auth_client: ApiClient, cleanup_ids: CleanupRegistry):
+async def test_update_topic(
+    auth_client: ApiClient, cleanup_ids: CleanupRegistry, test_project_id: str
+):
     # Create
-    resp = await auth_client.post("/topics/", json={"title": "UpdateMe", "project_id": PROJECT_ID})
+    resp = await auth_client.post("/topics/", json={"title": "UpdateMe", "project_id": test_project_id})
     assert resp.status_code == 201
     topic_id = resp.json()["id"]
     cleanup_ids.add("topic", topic_id)
@@ -94,9 +97,9 @@ async def test_get_topic_not_found(auth_client: ApiClient):
 # ── TS-T3.1 | test_delete_topic + test_deleted_topic_not_found ───────────────
 
 @pytest.mark.asyncio
-async def test_delete_topic(auth_client: ApiClient):
+async def test_delete_topic(auth_client: ApiClient, test_project_id: str):
     # Create
-    resp = await auth_client.post("/topics/", json={"title": "DeleteMe", "project_id": PROJECT_ID})
+    resp = await auth_client.post("/topics/", json={"title": "DeleteMe", "project_id": test_project_id})
     assert resp.status_code == 201
     topic_id = resp.json()["id"]
 
@@ -106,9 +109,9 @@ async def test_delete_topic(auth_client: ApiClient):
 
 
 @pytest.mark.asyncio
-async def test_deleted_topic_not_found(auth_client: ApiClient):
+async def test_deleted_topic_not_found(auth_client: ApiClient, test_project_id: str):
     # Create
-    resp = await auth_client.post("/topics/", json={"title": "DeleteAndGet", "project_id": PROJECT_ID})
+    resp = await auth_client.post("/topics/", json={"title": "DeleteAndGet", "project_id": test_project_id})
     assert resp.status_code == 201
     topic_id = resp.json()["id"]
 
