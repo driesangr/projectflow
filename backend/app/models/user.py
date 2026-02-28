@@ -23,7 +23,8 @@ class GlobalRole(str, enum.Enum):
 class User(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "users"
 
-    username:        Mapped[str]  = mapped_column(String(100), unique=True, nullable=False, index=True)
+    # Uniqueness enforced by partial index (migration 0010), like email.
+    username:        Mapped[str]  = mapped_column(String(100), nullable=False, index=True)
     # Uniqueness is enforced by a partial index (see migration 0009):
     # only non-deleted rows are unique, so soft-deleted emails can be reused.
     email:           Mapped[str]  = mapped_column(String(255), nullable=False, index=True)

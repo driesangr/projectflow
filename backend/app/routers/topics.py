@@ -10,9 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.permissions import check_artifact_permission
 from app.database import get_db
 from app.models.audit_log import AuditAction, AuditLog
+from app.models.project_membership import ProjectMembership
 from app.models.role_permission import ArtifactType
 from app.models.topic import Topic
-from app.models.user import User
+from app.models.user import GlobalRole, User
 from app.routers.auth import get_current_user
 from app.schemas.reorder import ReorderItem
 from app.schemas.topic import TopicCreate, TopicResponse, TopicUpdate
@@ -24,11 +25,30 @@ router = APIRouter(prefix="/topics", tags=["topics"])
 async def list_topics(
     project_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> list[Topic]:
     query = select(Topic).where(Topic.is_deleted.is_(False))
+
     if project_id:
+        # Explicit project filter: verify the caller may read that project
+        if not await check_artifact_permission(
+            current_user, project_id, ArtifactType.topic, "read", db
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission denied: 'read' on 'topic'.",
+            )
         query = query.where(Topic.project_id == project_id)
+    elif current_user.global_role not in (GlobalRole.superuser, GlobalRole.admin):
+        # No filter given: restrict to topics in projects the user is a member of
+        from sqlalchemy import exists
+        query = query.where(
+            exists().where(
+                ProjectMembership.project_id == Topic.project_id,
+                ProjectMembership.user_id == current_user.id,
+            )
+        )
+
     result = await db.execute(query.order_by(Topic.position.asc(), Topic.created_at.asc()))
     return result.scalars().all()
 
