@@ -10,6 +10,87 @@ Bearbeitung konsequent mit Status-Updates versehen werden.
 
 ---
 
+## Umgebungen
+
+| Umgebung | Backend | Frontend |
+|---|---|---|
+| **DEV** | `http://localhost:8000` | `http://localhost:5173` |
+| **Staging** | `http://localhost:8001` | `http://localhost:5174` |
+
+Credentials in beiden Umgebungen: `admin / admin123`
+
+---
+
+## Staging-getriebener Entwicklungsworkflow
+
+> **Dieser Workflow gilt, sobald DEV-Stand nach Staging deployed wurde.**
+> Voraussetzung: Software-Code UND Datenbank wurden von DEV nach Staging übertragen.
+
+### Grundprinzip
+
+| Was | Wo |
+|---|---|
+| Arbeitsanweisungen lesen (Topics, Deliverables, User Stories, Tasks) | **Staging** (`localhost:8001`) |
+| Status-Updates setzen (in_progress / done) | **Staging** (`localhost:8001`) |
+| Code entwickeln und testen | **DEV** (`localhost:8000`) |
+
+### Schritt-für-Schritt
+
+**Zu Beginn jeder Session:**
+```bash
+# Token für Staging holen
+STAGING_TOKEN=$(curl -s -X POST http://localhost:8001/auth/login \
+  -d "username=admin&password=admin123" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+# Token für DEV holen (für manuelle Tests)
+DEV_TOKEN=$(curl -s -X POST http://localhost:8000/auth/login \
+  -d "username=admin&password=admin123" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+```
+
+**Offene Tasks aus Staging lesen:**
+```bash
+# Alle User Stories mit Status "todo" oder "in_progress" im Projekt abrufen
+curl -s -H "Authorization: Bearer $STAGING_TOKEN" \
+  "http://localhost:8001/user-stories/?project_id={PROJECT_ID}" \
+  | python3 -c "
+import sys, json
+stories = json.load(sys.stdin)
+for s in stories:
+    if s['status'] != 'done':
+        print(s['status'], '|', s['id'], '|', s['title'])
+"
+```
+
+**Vor Implementierungsbeginn – Status auf Staging setzen:**
+```bash
+# Task, User Story, Deliverable auf in_progress (gegen Staging)
+curl -s -X PUT http://localhost:8001/tasks/{TASK_ID} \
+  -H "Authorization: Bearer $STAGING_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "in_progress"}'
+```
+
+**Implementierung – immer in DEV:**
+- Code ändern, `uvicorn`/Docker in DEV testen
+- Integrationstests gegen DEV (`localhost:8000`) laufen lassen
+
+**Nach Abschluss – Status auf Staging setzen:**
+```bash
+# Task (und ggf. Story + Deliverable) auf done (gegen Staging)
+curl -s -X PUT http://localhost:8001/tasks/{TASK_ID} \
+  -H "Authorization: Bearer $STAGING_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "done"}'
+```
+
+> **Wichtig:** Die Status-API-Calls aus dem Abschnitt „Workflow pro Task" unten
+> gelten weiterhin – aber alle URLs zeigen auf `localhost:8001` (Staging), nicht
+> auf `localhost:8000` (DEV).
+
+---
+
 ## Status-Tracking: Pflichtverhalten
 
 > **Wichtig:** Diese Anweisungen gelten für ALLE Artefakte auf ALLEN Ebenen.
