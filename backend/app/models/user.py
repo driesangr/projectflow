@@ -24,7 +24,9 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "users"
 
     username:        Mapped[str]  = mapped_column(String(100), unique=True, nullable=False, index=True)
-    email:           Mapped[str]  = mapped_column(String(255), unique=True, nullable=False, index=True)
+    # Uniqueness is enforced by a partial index (see migration 0009):
+    # only non-deleted rows are unique, so soft-deleted emails can be reused.
+    email:           Mapped[str]  = mapped_column(String(255), nullable=False, index=True)
     hashed_password: Mapped[str]  = mapped_column(String(255), nullable=False)
     full_name:       Mapped[str]  = mapped_column(String(255), nullable=True)
     is_active:       Mapped[bool] = mapped_column(Boolean, default=True,  nullable=False)
