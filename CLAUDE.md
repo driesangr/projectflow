@@ -12,19 +12,47 @@ Bearbeitung konsequent mit Status-Updates versehen werden.
 
 ## Umgebungen
 
-| Umgebung | Backend | Frontend |
-|---|---|---|
-| **DEV** | `http://localhost:8000` | `http://localhost:5173` |
-| **Staging** | `http://localhost:8001` | `http://localhost:5174` |
+| Umgebung | Backend | Frontend | Credentials |
+|---|---|---|---|
+| **DEV** | `http://localhost:8000` | `http://localhost:5173` | `admin / admin123` |
+| **Staging** | `http://localhost:8001` | `http://localhost:5174` | `admin / admin123` |
+| **Produktion** | `https://projectflow.driesang.de/api` | `https://projectflow.driesang.de` | `driesang / Flow-2026-DE` |
 
-Credentials in beiden Umgebungen: `admin / admin123`
+---
+
+## Wichtige Regeln für Umgebungen
+
+> **ACHTUNG: Kein Datenbankdump zwischen Umgebungen!**
+
+- **Niemals** eine vollständige Datenbank von Staging nach Produktion übertragen.
+  Die Produktionsdatenbank enthält eigene Benutzer und Daten, die abweichen.
+- **Artefakte** (Topics, Deliverables, User Stories, Tasks) für das Projekt **„Project Flow"**
+  werden **direkt in der Produktionsumgebung** angelegt – nicht in Staging und dann übertragen.
+- Wenn Artefakte auch in Staging vorhanden sein sollen: via API-Sync anlegen
+  (POST-Calls gegen beide Umgebungen), **niemals** via DB-Dump.
+- Code-Deployments (Docker-Images) können problemlos auf alle Umgebungen ausgerollt werden.
+
+### Artefakte in Produktion anlegen
+
+```bash
+# Token für Produktion holen
+PROD_TOKEN=$(curl -s -X POST https://projectflow.driesang.de/api/auth/login \
+  -d "username=driesang&password=Flow-2026-DE" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+# Beispiel: Topic anlegen
+curl -s -X POST https://projectflow.driesang.de/api/topics/ \
+  -H "Authorization: Bearer $PROD_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "...", "project_id": "...", "status": "todo"}'
+```
 
 ---
 
 ## Staging-getriebener Entwicklungsworkflow
 
 > **Dieser Workflow gilt, sobald DEV-Stand nach Staging deployed wurde.**
-> Voraussetzung: Software-Code UND Datenbank wurden von DEV nach Staging übertragen.
+> Voraussetzung: Software-Code wurde von DEV nach Staging deployed (kein DB-Dump!).
 
 ### Grundprinzip
 

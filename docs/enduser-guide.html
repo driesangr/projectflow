@@ -409,7 +409,7 @@
   <div class="hero">
     <h1>Project Flow</h1>
     <p>Hierarchisches Projektmanagement für Teams – von der grossen Idee bis zum einzelnen Task.</p>
-    <span class="version">Benutzerhandbuch · Version 0.3.7</span>
+    <span class="version">Benutzerhandbuch · Version 0.4.0</span>
   </div>
 
   <article>
@@ -455,6 +455,11 @@
           <h4>Maturity-Tracking</h4>
           <p>Fortschrittsbalken propagieren automatisch von unten nach oben.</p>
         </div>
+        <div class="feature-card">
+          <div class="icon">👁️</div>
+          <h4>Passwort-Sichtbarkeit</h4>
+          <p>Passwortfelder mit Ein-/Ausblenden-Button – in allen Formularen.</p>
+        </div>
       </div>
     </section>
 
@@ -469,6 +474,7 @@
       <ol class="steps">
         <li>Browser öffnen und zur Project-Flow-URL navigieren.</li>
         <li>Benutzernamen und Passwort eingeben.</li>
+        <li>Zum Prüfen der Eingabe das Auge-Symbol <strong>👁</strong> neben dem Passwortfeld anklicken – damit wird das Passwort kurz sichtbar gemacht.</li>
         <li>Auf <strong>Anmelden</strong> klicken.</li>
         <li>Du landest direkt auf der Projektübersicht.</li>
       </ol>
@@ -496,6 +502,7 @@
           <tr><td><strong>Projekte</strong></td><td>Klick öffnet das Projekt mit Topics und Deliverables.</td></tr>
           <tr><td><strong>Sprints</strong></td><td>Vergangene, laufende und geplante Sprints eines Projekts.</td></tr>
           <tr><td><strong>Einstellungen</strong> (Admin)</td><td>Benutzerverwaltung und Berechtigungskonfiguration.</td></tr>
+          <tr><td><strong>Dokumentation</strong></td><td>Öffnet dieses Benutzerhandbuch in einem neuen Tab.</td></tr>
           <tr><td><strong>Mein Profil</strong></td><td>Persönliche Daten einsehen und anpassen.</td></tr>
           <tr><td><strong>Abmelden</strong></td><td>Sitzung beenden.</td></tr>
         </tbody>
@@ -1002,7 +1009,7 @@
       <h2>Mein Profil</h2>
       <p>
         Unter <em>Mein Profil</em> (Sidebar unten) kannst du deine persönlichen Daten
-        einsehen:
+        einsehen und bearbeiten:
       </p>
       <ul style="margin: 0 0 14px 24px;">
         <li>Benutzername und E-Mail-Adresse</li>
@@ -1010,10 +1017,20 @@
         <li>Globale Rolle</li>
         <li>Projektmitgliedschaften mit jeweiliger Rolle</li>
       </ul>
+
+      <h3>Passwort ändern</h3>
       <p>
-        Passwortänderungen und Änderungen am vollständigen Namen sind über
-        das Profil möglich. Den Benutzernamen kann nur ein Administrator anpassen.
+        Im Abschnitt <em>Profildaten bearbeiten</em> findest du zwei Felder für das
+        neue Passwort – beide mit Auge-Icon zum kurzzeitigen Einblenden.
+        Lasse die Felder leer, wenn du das Passwort nicht ändern möchtest.
+        Stimmen die beiden Eingaben nicht überein, erscheint ein Hinweis,
+        und das Speichern ist erst möglich, wenn sie übereinstimmen.
       </p>
+
+      <div class="box tip">
+        <strong>Benutzername</strong>
+        Den Benutzernamen kann nur ein Administrator in der Benutzerverwaltung anpassen.
+      </div>
     </section>
 
     <!-- ── ADMINISTRATION ─────────────────────────────────────────────── -->
@@ -1031,13 +1048,46 @@
         <li>Neuen Benutzer anlegen oder bestehenden bearbeiten.</li>
       </ol>
 
+      <p>
+        Die Benutzerliste zeigt neben Benutzername, E-Mail und globaler Rolle auch
+        alle <strong>Projektrollen</strong> des jeweiligen Nutzers als farbige Badges.
+        So ist auf einen Blick ersichtlich, in welchen Projekten ein Nutzer tätig ist
+        und mit welcher Rolle.
+      </p>
+
+      <table>
+        <thead><tr><th>Spalte</th><th>Beschreibung</th></tr></thead>
+        <tbody>
+          <tr><td>Benutzer</td><td>Benutzername und vollständiger Name.</td></tr>
+          <tr><td>E-Mail</td><td>Eindeutige E-Mail-Adresse des Nutzers.</td></tr>
+          <tr><td>Globale Rolle</td><td>User / Admin / Superuser</td></tr>
+          <tr><td>Projektrollen</td><td>Farbige Badges für jede Projektmitgliedschaft (Projekt + Rolle).</td></tr>
+          <tr><td>Status</td><td>Aktiv / Inaktiv – Inaktive Nutzer können sich nicht anmelden.</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Neuen Benutzer anlegen</h4>
+      <p>
+        Im Anlegen-Dialog müssen Benutzername, E-Mail und ein Passwort vergeben werden.
+        Das Passwort muss in einem zweiten Feld bestätigt werden – erst bei Übereinstimmung
+        wird der Speichern-Button aktiv. Beide Felder haben ein Auge-Icon zum Einblenden.
+      </p>
+
+      <h4>Benutzer bearbeiten</h4>
+      <p>
+        Im Bearbeiten-Dialog ist das Passwortfeld standardmässig ausgeblendet.
+        Über den Link <em>Passwort ändern</em> (Schlüssel-Icon) klappt ein Bereich mit
+        zwei Passwortfeldern auf. Über <em>Abbrechen</em> lässt sich die Passwortänderung
+        rückgängig machen – das bestehende Passwort bleibt unverändert.
+      </p>
+
       <table>
         <thead><tr><th>Feld</th><th>Beschreibung</th></tr></thead>
         <tbody>
-          <tr><td>Benutzername</td><td>Eindeutig, wird für den Login verwendet.</td></tr>
+          <tr><td>Benutzername</td><td>Eindeutig, wird für den Login verwendet (nur beim Anlegen setzbar).</td></tr>
           <tr><td>E-Mail</td><td>Eindeutig, für Benachrichtigungen (zukünftig).</td></tr>
           <tr><td>Vollständiger Name</td><td>Anzeigename in der Anwendung.</td></tr>
-          <tr><td>Passwort</td><td>Beim Anlegen setzen; kann später geändert werden.</td></tr>
+          <tr><td>Passwort</td><td>Beim Anlegen erforderlich; im Bearbeiten-Dialog optional per „Passwort ändern".</td></tr>
           <tr><td>Globale Rolle</td><td>User / Admin / Superuser</td></tr>
           <tr><td>Aktiv</td><td>Inaktive Nutzer können sich nicht anmelden.</td></tr>
         </tbody>
@@ -1114,7 +1164,7 @@
     <!-- ── FOOTER ─────────────────────────────────────────────────────── -->
     <hr style="border:none; border-top:1px solid var(--gray-200); margin: 0 0 24px;" />
     <p style="font-size:.85rem; color:var(--gray-600);">
-      Project Flow · Benutzerhandbuch · Version 0.3.7 · Stand Februar 2026
+      Project Flow · Benutzerhandbuch · Version 0.4.0 · Stand März 2026
     </p>
 
   </article>
