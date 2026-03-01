@@ -19,13 +19,15 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.permissions import require_global_admin, require_superuser
 from app.core.security import hash_password
 from app.database import get_db
+from app.models.project_membership import ProjectMembership
 from app.models.user import GlobalRole, User
 from app.routers.auth import get_current_user
-from app.schemas.membership import UserCreate, UserResponse, UserUpdate
+from app.schemas.membership import UserCreate, UserMembershipInfo, UserResponse, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -38,11 +40,25 @@ router = APIRouter(prefix="/users", tags=["users"])
 async def list_users(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_global_admin()),
-) -> list[User]:
+) -> list[UserResponse]:
     result = await db.execute(
-        select(User).where(User.is_deleted.is_(False)).order_by(User.username)
+        select(User)
+        .where(User.is_deleted.is_(False))
+        .order_by(User.username)
+        .options(
+            selectinload(User.memberships).selectinload(ProjectMembership.project)
+        )
     )
-    return result.scalars().all()
+    users = result.scalars().all()
+    return [
+        UserResponse(
+            **{k: getattr(u, k) for k in ("id", "username", "email", "full_name",
+                                           "is_active", "global_role", "is_admin",
+                                           "created_at", "updated_at")},
+            memberships=[UserMembershipInfo.from_membership(m) for m in u.memberships],
+        )
+        for u in users
+    ]
 
 
 @router.get(

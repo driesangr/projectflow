@@ -33,6 +33,12 @@ export interface ProjectGroup {
 export type GlobalRole = 'superuser' | 'admin' | 'user'
 export type ProjectRole = 'owner' | 'manager' | 'member' | 'viewer'
 
+export interface UserMembershipInfo {
+  project_id: string
+  project_title: string
+  role: ProjectRole
+}
+
 export interface User {
   id: string
   username: string
@@ -43,6 +49,7 @@ export interface User {
   global_role: GlobalRole
   created_at: string
   updated_at: string
+  memberships: UserMembershipInfo[]
 }
 
 export type UserResponse = User

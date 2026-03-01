@@ -21,6 +21,23 @@ class UserPublic(BaseModel):
     email:     str
 
 
+class UserMembershipInfo(BaseModel):
+    """Slim membership entry embedded in UserResponse."""
+    model_config = ConfigDict(from_attributes=True)
+
+    project_id:    UUID
+    project_title: str
+    role:          ProjectRole
+
+    @classmethod
+    def from_membership(cls, m: object) -> "UserMembershipInfo":
+        return cls(
+            project_id=m.project_id,       # type: ignore[attr-defined]
+            project_title=m.project.title, # type: ignore[attr-defined]
+            role=m.role,                   # type: ignore[attr-defined]
+        )
+
+
 class UserResponse(BaseModel):
     """Full user profile – returned to the user themselves or admins."""
     model_config = ConfigDict(from_attributes=True)
@@ -35,6 +52,7 @@ class UserResponse(BaseModel):
     is_admin:    bool
     created_at:  datetime
     updated_at:  datetime
+    memberships: list[UserMembershipInfo] = []
 
 
 class UserCreate(BaseModel):

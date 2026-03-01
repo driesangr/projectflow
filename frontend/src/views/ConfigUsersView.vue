@@ -94,6 +94,16 @@ const roleColor: Record<string, string> = {
   user: 'bg-gray-100 text-gray-600',
 }
 
+const projectRoleColor: Record<string, string> = {
+  owner:   'bg-violet-100 text-violet-700',
+  manager: 'bg-blue-100 text-blue-700',
+  member:  'bg-emerald-100 text-emerald-700',
+  viewer:  'bg-gray-100 text-gray-600',
+}
+const projectRoleLabel: Record<string, string> = {
+  owner: 'Owner', manager: 'Manager', member: 'Member', viewer: 'Viewer',
+}
+
 onMounted(() => store.fetchAll())
 </script>
 
@@ -143,14 +153,15 @@ onMounted(() => store.fetchAll())
           <tr>
             <th class="px-4 py-3 text-left font-semibold text-gray-600">Benutzer</th>
             <th class="px-4 py-3 text-left font-semibold text-gray-600">E-Mail</th>
-            <th class="px-4 py-3 text-left font-semibold text-gray-600">Rolle</th>
+            <th class="px-4 py-3 text-left font-semibold text-gray-600">Globale Rolle</th>
+            <th class="px-4 py-3 text-left font-semibold text-gray-600">Projektrollen</th>
             <th class="px-4 py-3 text-left font-semibold text-gray-600">Status</th>
             <th class="px-4 py-3 text-right font-semibold text-gray-600">Aktionen</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
           <tr v-if="filtered.length === 0">
-            <td colspan="5" class="px-4 py-8 text-center text-gray-400">Keine Benutzer gefunden</td>
+            <td colspan="6" class="px-4 py-8 text-center text-gray-400">Keine Benutzer gefunden</td>
           </tr>
           <tr v-for="user in filtered" :key="user.id" class="hover:bg-gray-50 transition-colors">
             <td class="px-4 py-3">
@@ -169,6 +180,21 @@ onMounted(() => store.fetchAll())
               <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium" :class="roleColor[user.global_role]">
                 {{ roleLabel[user.global_role] }}
               </span>
+            </td>
+            <td class="px-4 py-3">
+              <span v-if="!user.memberships?.length" class="text-xs text-gray-400">–</span>
+              <div v-else class="flex flex-wrap gap-1">
+                <span
+                  v-for="m in user.memberships"
+                  :key="m.project_id"
+                  class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                  :class="projectRoleColor[m.role]"
+                  :title="m.project_title"
+                >
+                  <span class="max-w-[7rem] truncate">{{ m.project_title }}</span>
+                  <span class="ml-1 opacity-70">· {{ projectRoleLabel[m.role] }}</span>
+                </span>
+              </div>
             </td>
             <td class="px-4 py-3">
               <span class="inline-flex items-center gap-1 text-xs" :class="user.is_active ? 'text-green-600' : 'text-gray-400'">
