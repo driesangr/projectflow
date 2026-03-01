@@ -6,15 +6,41 @@ import Modal from '@/components/common/Modal.vue'
 import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import ConfirmDelete from '@/components/common/ConfirmDelete.vue'
+import PasswordInput from '@/components/common/PasswordInput.vue'
 import type { UserResponse, GlobalRole } from '@/types'
 import {
   PlusIcon, PencilSquareIcon, TrashIcon,
-  CheckCircleIcon, XCircleIcon, MagnifyingGlassIcon
+  CheckCircleIcon, XCircleIcon, MagnifyingGlassIcon, KeyIcon,
 } from '@heroicons/vue/24/outline'
 
 const store = useUsersStore()
 const auth = useAuthStore()
 const isSuperuser = computed(() => auth.user?.global_role === 'superuser')
+
+// Passwort-Bestätigung
+const passwordConfirm = ref('')
+const showPasswordChange = ref(false)
+const passwordChangeConfirm = ref('')
+
+const passwordsMatch = computed(() =>
+  !!form.value.password && form.value.password === passwordConfirm.value
+)
+const passwordChangeFilled = computed(() =>
+  !!form.value.password && form.value.password === passwordChangeConfirm.value
+)
+
+const saveDisabled = computed(() => {
+  if (formSaving.value) return true
+  if (!editUser.value) return !passwordsMatch.value  // Create: beide Felder müssen übereinstimmen
+  if (showPasswordChange.value) return !passwordChangeFilled.value  // Edit mit Passwort-Änderung
+  return false
+})
+
+function resetPasswordChange() {
+  showPasswordChange.value = false
+  form.value.password = ''
+  passwordChangeConfirm.value = ''
+}
 
 // ── Filter ────────────────────────────────────────────────────────────────────
 const search = ref('')
@@ -44,6 +70,7 @@ const form = ref({
 function openCreate() {
   editUser.value = null
   form.value = { username: '', email: '', full_name: '', password: '', global_role: 'user', is_active: true }
+  passwordConfirm.value = ''
   formError.value = null
   showForm.value = true
 }
@@ -51,6 +78,9 @@ function openCreate() {
 function openEdit(user: UserResponse) {
   editUser.value = user
   form.value = { username: user.username, email: user.email, full_name: user.full_name ?? '', password: '', global_role: user.global_role, is_active: user.is_active }
+  passwordConfirm.value = ''
+  showPasswordChange.value = false
+  passwordChangeConfirm.value = ''
   formError.value = null
   showForm.value = true
 }
@@ -127,15 +157,15 @@ onMounted(() => store.fetchAll())
     <div class="flex flex-wrap gap-3">
       <div class="relative flex-1 min-w-48">
         <MagnifyingGlassIcon class="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-        <input v-model="search" type="text" placeholder="Suche…" class="input pl-9 w-full" />
+        <input v-model="search" type="text" placeholder="Suche…" class="form-input pl-9 w-full" />
       </div>
-      <select v-model="filterRole" class="input">
+      <select v-model="filterRole" class="form-select">
         <option value="">Alle Rollen</option>
         <option value="superuser">Superuser</option>
         <option value="admin">Admin</option>
         <option value="user">User</option>
       </select>
-      <select v-model="filterActive" class="input">
+      <select v-model="filterActive" class="form-select">
         <option value="all">Alle</option>
         <option value="active">Aktiv</option>
         <option value="inactive">Inaktiv</option>
@@ -230,26 +260,69 @@ onMounted(() => store.fetchAll())
       <ErrorBanner v-if="formError" :message="formError" />
 
       <div v-if="!editUser">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Benutzername *</label>
-        <input v-model="form.username" type="text" class="input w-full" />
+        <label class="form-label">Benutzername *</label>
+        <input v-model="form.username" type="text" class="form-input" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-        <input v-model="form.full_name" type="text" class="input w-full" placeholder="Max Mustermann" />
+        <label class="form-label">Name</label>
+        <input v-model="form.full_name" type="text" class="form-input" placeholder="Max Mustermann" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
-        <input v-model="form.email" type="email" class="input w-full" />
+        <label class="form-label">E-Mail *</label>
+        <input v-model="form.email" type="email" class="form-input" />
       </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-          Passwort {{ editUser ? '(leer = unverändert)' : '*' }}
-        </label>
-        <input v-model="form.password" type="password" class="input w-full" />
+
+      <!-- Passwort: CREATE – zwei Felder mit Bestätigung -->
+      <template v-if="!editUser">
+        <div>
+          <label class="form-label">Passwort *</label>
+          <PasswordInput v-model="form.password" placeholder="••••••••" />
+        </div>
+        <div>
+          <label class="form-label">Passwort bestätigen *</label>
+          <PasswordInput v-model="passwordConfirm" placeholder="••••••••" />
+          <p v-if="passwordConfirm && !passwordsMatch" class="form-error">
+            Passwörter stimmen nicht überein
+          </p>
+        </div>
+      </template>
+
+      <!-- Passwort: EDIT – "Passwort ändern" Button -->
+      <div v-else>
+        <div class="flex items-center justify-between mb-1">
+          <label class="form-label mb-0">Passwort</label>
+          <button
+            v-if="!showPasswordChange"
+            type="button"
+            class="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-800 font-medium"
+            @click="showPasswordChange = true"
+          >
+            <KeyIcon class="h-3.5 w-3.5" />
+            Passwort ändern
+          </button>
+          <button
+            v-else
+            type="button"
+            class="text-xs text-gray-400 hover:text-gray-600"
+            @click="resetPasswordChange"
+          >
+            Abbrechen
+          </button>
+        </div>
+        <template v-if="showPasswordChange">
+          <PasswordInput v-model="form.password" placeholder="Neues Passwort" class="mb-2" />
+          <label class="form-label">Bestätigen</label>
+          <PasswordInput v-model="passwordChangeConfirm" placeholder="••••••••" />
+          <p v-if="passwordChangeConfirm && !passwordChangeFilled" class="form-error">
+            Passwörter stimmen nicht überein
+          </p>
+        </template>
+        <p v-else class="text-xs text-gray-400 italic">Nicht geändert</p>
       </div>
+
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Globale Rolle</label>
-        <select v-model="form.global_role" class="input w-full">
+        <label class="form-label">Globale Rolle</label>
+        <select v-model="form.global_role" class="form-select">
           <option value="user">User (Standard)</option>
           <option value="admin">Admin</option>
           <option v-if="isSuperuser" value="superuser">Superuser</option>
@@ -262,7 +335,7 @@ onMounted(() => store.fetchAll())
 
       <div class="flex justify-end gap-2 pt-2">
         <button class="btn-secondary" @click="showForm = false">Abbrechen</button>
-        <button class="btn-primary" :disabled="formSaving" @click="saveForm">
+        <button class="btn-primary" :disabled="saveDisabled" @click="saveForm">
           {{ formSaving ? 'Speichert…' : 'Speichern' }}
         </button>
       </div>

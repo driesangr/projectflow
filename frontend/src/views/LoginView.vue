@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { RocketLaunchIcon } from '@heroicons/vue/24/outline'
+import PasswordInput from '@/components/common/PasswordInput.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -60,14 +61,11 @@ async function submit() {
 
             <div>
               <label class="form-label" for="password">Password</label>
-              <input
+              <PasswordInput
                 id="password"
                 v-model="password"
-                type="password"
-                class="form-input"
-                required
-                autocomplete="current-password"
                 placeholder="••••••••"
+                :required="true"
               />
             </div>
 

@@ -6,6 +6,7 @@ import { listMembers } from '@/api/users'
 import { useProjectsStore } from '@/stores/projects'
 import ErrorBanner from '@/components/common/ErrorBanner.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import PasswordInput from '@/components/common/PasswordInput.vue'
 import type { MembershipResponse } from '@/types'
 
 const auth = useAuthStore()
@@ -125,25 +126,28 @@ onMounted(async () => {
 
       <div class="space-y-3">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-          <input v-model="form.full_name" type="text" class="input w-full" placeholder="Max Mustermann" />
+          <label class="form-label">Name</label>
+          <input v-model="form.full_name" type="text" class="form-input" placeholder="Max Mustermann" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
-          <input v-model="form.email" type="email" class="input w-full" />
+          <label class="form-label">E-Mail</label>
+          <input v-model="form.email" type="email" class="form-input" />
         </div>
         <div class="border-t border-gray-100 pt-3">
           <p class="text-xs text-gray-500 mb-2">Passwort ändern (leer lassen = kein Wechsel)</p>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Neues Passwort</label>
-              <input v-model="form.password" type="password" class="input w-full" />
+              <label class="form-label">Neues Passwort</label>
+              <PasswordInput v-model="form.password" placeholder="••••••••" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Wiederholen</label>
-              <input v-model="form.password_confirm" type="password" class="input w-full" />
+              <label class="form-label">Wiederholen</label>
+              <PasswordInput v-model="form.password_confirm" placeholder="••••••••" />
             </div>
           </div>
+          <p v-if="form.password_confirm && form.password !== form.password_confirm" class="form-error mt-2">
+            Passwörter stimmen nicht überein
+          </p>
         </div>
       </div>
 
